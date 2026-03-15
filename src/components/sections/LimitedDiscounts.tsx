@@ -30,12 +30,40 @@ export default function LimitedDiscounts() {
     return () => ctx.revert();
   }, []);
 
-  // Placeholder products from database
+  // Productos importados desde el catálogo con 10% de descuento
   const placeholders = [
-    { id: 1, name: "Sudadera Gracia", oldPrice: "$45.000", newPrice: "$35.000" },
-    { id: 2, name: "Polera Testimonio", oldPrice: "$25.000", newPrice: "$18.000" },
-    { id: 3, name: "Gorro Cruz", oldPrice: "$15.000", newPrice: "$10.000" },
-    { id: 4, name: "Chaqueta Fe", oldPrice: "$65.000", newPrice: "$49.990" },
+    { 
+      id: "maranata-back", 
+      name: "Maranata Back - Oversized", 
+      oldPrice: "$18.000", 
+      newPrice: "$16.200",
+      image: "/maranata-back.jpg",
+      slug: "maranata-back-oversized"
+    },
+    { 
+      id: "g315-polera", 
+      name: "Genesis 3:15 - Polera", 
+      oldPrice: "$14.000", 
+      newPrice: "$12.600",
+      image: "/catalogo/genesis315_polera_acidwash/black_baw_front.png",
+      slug: "genesis-315-polera-acid-wash"
+    },
+    { 
+      id: "g315-crew", 
+      name: "Genesis 3:15 - Crew", 
+      oldPrice: "$20.000", 
+      newPrice: "$18.000",
+      image: "/catalogo/genesis315_crew_acidwash/black_baw_front.png",
+      slug: "genesis-315-crew-acid-wash"
+    },
+    { 
+      id: "g315-hoodie", 
+      name: "Genesis 3:15 - Hoodie", 
+      oldPrice: "$24.000", 
+      newPrice: "$21.600",
+      image: "/catalogo/genesis315_hoodie_acidwash/black_color_front.png",
+      slug: "genesis-315-hoodie-acid-wash"
+    },
   ];
 
   return (
@@ -58,15 +86,18 @@ export default function LimitedDiscounts() {
         {/* Carousel Space */}
         <div className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory slide-container">
           {placeholders.map((item) => (
-            <div key={item.id} className="discount-card relative min-w-[280px] md:min-w-[320px] bg-white rounded-3xl p-4 shadow-sm border border-black/5 snap-start group hover:shadow-xl transition-all duration-300">
+            <Link href={`/tienda/${item.slug}`} key={item.id} className="discount-card relative block min-w-[280px] md:min-w-[320px] bg-white rounded-3xl p-4 shadow-sm border border-black/5 snap-start group hover:shadow-xl transition-all duration-300">
               <div className="aspect-[4/5] relative bg-neutral-100 rounded-2xl overflow-hidden mb-4">
-                <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 font-mono">
-                  OFERTA
+                <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full z-20 font-mono shadow-sm">
+                  -10%
                 </div>
-                {/* Placehodler image area */}
-                <div className="w-full h-full flex items-center justify-center bg-charcoal/5 group-hover:bg-charcoal/10 transition-colors">
-                  <ShoppingCart className="text-charcoal/20 w-12 h-12" />
-                </div>
+                {/* Product image area */}
+                <Image
+                  src={item.image}
+                  alt={item.name}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700 z-10"
+                />
               </div>
               <div className="px-2">
                 <h3 className="font-outfit font-semibold text-lg text-charcoal mb-2">{item.name}</h3>
@@ -75,7 +106,7 @@ export default function LimitedDiscounts() {
                   <span className="text-charcoal/40 text-sm line-through decoration-1">{item.oldPrice}</span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
