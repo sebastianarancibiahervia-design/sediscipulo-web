@@ -63,7 +63,7 @@ export default function HeroSection() {
           src="/cover-webpage.jpg" 
           alt="Nueva colección" 
           fill 
-          className="object-cover opacity-30 mix-blend-overlay"
+          className="object-cover opacity-5 mix-blend-overlay"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/80 via-charcoal/60 to-charcoal line-noise"></div>
