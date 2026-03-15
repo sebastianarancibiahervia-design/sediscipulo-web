@@ -12,7 +12,7 @@ export default function Footer() {
               <Image src="/logo_sediscipulo.png" alt="SeDiscipulo" width={130} height={36} className="h-9 w-auto object-contain" />
             </Link>
             <p className="text-sm leading-relaxed max-w-xs text-charcoal/60">
-              Diseños alineados a la verdad bíblica. Calidad premium y algodón de alto gramaje para testimonio vivo.
+              Diseños alineados a la verdad bíblica. Calidad premium y algodón de alto gramaje para que el mensaje perdure.
             </p>
             <div className="flex items-center gap-3 pt-1">
               <a href="https://wa.me/56933473640" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-black/5 hover:bg-[#25D366] hover:text-white text-charcoal/60 flex items-center justify-center transition-all">
@@ -61,15 +61,6 @@ export default function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-black/5 text-sm gap-4 text-charcoal/60">
           <p>© {new Date().getFullYear()} SeDiscipulo. Todos los derechos reservados.</p>
-          
-          {/* System Status: All systems operational */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/5 border border-black/10">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </span>
-            <span className="font-mono text-xs text-charcoal/80 tracking-wide font-medium">All systems operational</span>
-          </div>
         </div>
       </div>
     </footer>

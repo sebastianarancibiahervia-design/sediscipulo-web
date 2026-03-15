@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Scissors, PaintBucket, Send } from "lucide-react";
+import { ShoppingCart, Package, Truck } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -47,10 +47,10 @@ export default function ProcessFlow() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-24">
           <h2 className="text-3xl md:text-5xl font-sans font-bold text-charcoal mb-4">
-            Del Taller a tus <span className="font-serif italic text-black font-medium">Manos</span>
+            Trabajamos bajo el modelo <span className="font-serif italic text-black font-medium">"Print on demand"</span>
           </h2>
           <p className="text-charcoal/60 max-w-2xl mx-auto text-lg">
-            Cada prenda es tratada como un lienzo. Utilizamos las mejores técnicas de corte y DTF para garantizar que el mensaje perdure tanto como la tela.
+            No mantenemos stock de nuestros diseños, sino que los creamos exclusivamente bajo tu pedido.
           </p>
         </div>
 
@@ -76,28 +76,28 @@ export default function ProcessFlow() {
             {/* Step 1 */}
             <div className="process-node flex flex-col items-center text-center">
               <div className="w-20 h-20 rounded-2xl bg-white border border-black/10 shadow-sm flex items-center justify-center mb-6 text-charcoal group hover:scale-110 hover:shadow-lg transition-all duration-300">
-                <Scissors size={32} className="group-hover:rotate-12 transition-transform" />
+                <ShoppingCart size={32} className="group-hover:rotate-12 transition-transform" />
               </div>
-              <h3 className="text-xl font-bold font-sans text-charcoal mb-2">1. Corte Premium</h3>
-              <p className="text-charcoal/60 text-sm max-w-xs">Seleccionamos algodón de alto gramaje para un calce estructurado y elegante.</p>
+              <h3 className="text-xl font-bold font-sans text-charcoal mb-2">1. Haz tu pedido</h3>
+              <p className="text-charcoal/60 text-sm max-w-xs">Elige tu diseño favorito y la prenda que te acompañará. Inmediatamente lo ingresamos a producción.</p>
             </div>
 
             {/* Step 2 */}
             <div className="process-node flex flex-col items-center text-center">
               <div className="w-20 h-20 rounded-2xl bg-white border border-black/10 shadow-sm flex items-center justify-center mb-6 text-charcoal group hover:scale-110 hover:shadow-lg transition-all duration-300">
-                <PaintBucket size={32} className="group-hover:-rotate-12 transition-transform" />
+                <Package size={32} className="group-hover:-rotate-12 transition-transform" />
               </div>
-              <h3 className="text-xl font-bold font-sans text-charcoal mb-2">2. DTF de alta calidad</h3>
-              <p className="text-charcoal/60 text-sm max-w-xs">Estampados digitales que garantizan precisión en los detalles, alta durabilidad y flexibilidad superior.</p>
+              <h3 className="text-xl font-bold font-sans text-charcoal mb-2">2. Preparamos tu entrega</h3>
+              <p className="text-charcoal/60 text-sm max-w-xs">Tu prenda pasa a nuestro taller donde es estampada con dedicación, asegurando la más alta calidad.</p>
             </div>
 
             {/* Step 3 */}
             <div className="process-node flex flex-col items-center text-center">
               <div className="w-20 h-20 rounded-2xl bg-white border border-black/10 shadow-sm flex items-center justify-center mb-6 text-charcoal group hover:scale-110 hover:shadow-lg transition-all duration-300">
-                <Send size={32} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                <Truck size={32} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <h3 className="text-xl font-bold font-sans text-charcoal mb-2">3. Envío a todo Chile</h3>
-              <p className="text-charcoal/60 text-sm max-w-xs">Recibe tus productos rápidamente y de forma segura y protegida.</p>
+              <h3 className="text-xl font-bold font-sans text-charcoal mb-2">3. Enviamos a todo Chile</h3>
+              <p className="text-charcoal/60 text-sm max-w-xs">Recibe tus productos rápidamente y de forma segura y protegida en la puerta de tu hogar.</p>
             </div>
           </div>
         </div>

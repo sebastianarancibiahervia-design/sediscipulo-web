@@ -12,10 +12,15 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({ nombre: "", telefono: "", correo: "", detalle: "" });
   const [enviado, setEnviado] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: integrar envío a sarancibiahervia@gmail.com (EmailJS / Resend / API Route)
-    setEnviado(true);
+    const formData = new FormData(e.currentTarget);
+    fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(Array.from(formData.entries()) as [string, string][]).toString(),
+    }).then(() => setEnviado(true))
+      .catch((error) => console.error("Error al enviar el formulario:", error));
   };
 
   return (
@@ -57,7 +62,8 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} name="cotizacion" method="POST" data-netlify="true" className="space-y-4">
+              <input type="hidden" name="form-name" value="cotizacion" />
               {[
                 { id: "nombre", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
                 { id: "telefono", label: "Número de teléfono", type: "tel", placeholder: "+56 9 XXXX XXXX" },
@@ -73,7 +79,7 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
                     required
                     placeholder={placeholder}
                     value={form[id as keyof typeof form]}
-                    onChange={(e) => setForm({ ...form, [id]: e.target.value })}
+                    name={id}
                     className="w-full px-4 py-3 rounded-xl border border-black/10 bg-neutral-50 text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/30 transition-all"
                   />
                 </div>
@@ -88,7 +94,7 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
                   rows={4}
                   placeholder="Ej: 30 poleras talla M para retiro de jóvenes, con diseño personalizado..."
                   value={form.detalle}
-                  onChange={(e) => setForm({ ...form, detalle: e.target.value })}
+                  name="detalle"
                   className="w-full px-4 py-3 rounded-xl border border-black/10 bg-neutral-50 text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/30 transition-all resize-none"
                 />
               </div>

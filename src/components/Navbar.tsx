@@ -213,7 +213,17 @@ export default function Navbar() {
               <p className="text-charcoal/60 text-sm">Regístrate para compras más rápidas, seguimiento de pedidos y acceso a diseños exclusivos.</p>
             </div>
             
-            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setIsLoginOpen(false); }}>
+            <form className="space-y-4" name="registro" method="POST" data-netlify="true" onSubmit={(e) => { 
+              e.preventDefault(); 
+              const formData = new FormData(e.currentTarget);
+              fetch("/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(Array.from(formData.entries()) as [string, string][]).toString(),
+              }).then(() => setIsLoginOpen(false))
+                .catch((error) => console.error(error));
+            }}>
+              <input type="hidden" name="form-name" value="registro" />
               <div>
                 <label className="block text-xs font-mono font-medium text-charcoal/70 mb-1.5 uppercase tracking-wider">Nombre Completo</label>
                 <input required type="text" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="Ej. Juan Pérez" />

@@ -29,8 +29,11 @@ const ibmPlex = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SeDiscipulo | eCommerce de Ropa Cristiana",
+  title: "SeDiscipulo | Tienda de ropa cristiana",
   description: "Diseños alineados a la verdad bíblica con calidad premium",
+  icons: {
+    icon: "/logo_sediscipulo.png",
+  },
 };
 
 export default function RootLayout({
