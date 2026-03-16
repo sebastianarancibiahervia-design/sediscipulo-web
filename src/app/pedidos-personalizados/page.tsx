@@ -17,11 +17,15 @@ export default function PedidosPersonalizadosPage() {
 
         {/* Gallery */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-          {[1, 2, 3].map((num) => (
-            <div key={num} className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-lg border border-black/5 group">
+          {[
+            { src: "pers_campamento_jovenes.jpg", alt: "Pedidos para Campamentos" },
+            { src: "pers_equipos_multimedia.jpg", alt: "Equipos y Eventos" },
+            { src: "pers_eventos_especiales.jpg", alt: "Personalizados Ministerios" }
+          ].map((img, i) => (
+            <div key={i} className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-lg border border-black/5 group">
               <Image
-                src={`/imagenes_personalizados/foto${num}.jpg`} // Assuming they are named foto1, foto2, foto3 or something we can adapt. We will use absolute placeholders and adjust after if needed. But usually we must know the exact filenames.
-                alt={`Trabajo personalizado ${num}`}
+                src={`/imagenes_personalizados/${img.src}`}
+                alt={img.alt}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
