@@ -16,13 +16,15 @@ export default function LimitedDiscounts() {
     const ctx = gsap.context(() => {
       gsap.from(".discount-card", {
         y: 50,
-        opacity: 0,
+        autoAlpha: 0,
         duration: 0.8,
         stagger: 0.15,
         ease: "power3.out",
+        clearProps: "all",
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top 80%",
+          start: "top 85%",
+          once: true,
         },
       });
     }, sectionRef);
