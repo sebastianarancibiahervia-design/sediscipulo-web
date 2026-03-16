@@ -60,10 +60,10 @@ export default function HeroSection() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image 
-          src="/cover-webpage.jpg" 
+          src="/maranata-back.jpg" 
           alt="Nueva colección" 
           fill 
-          className="object-cover"
+          className="object-cover opacity-80 mix-blend-overlay"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/30 via-transparent to-charcoal line-noise"></div>
