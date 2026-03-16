@@ -1,6 +1,12 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
+import { X } from "lucide-react";
 
 export default function PedidosPersonalizadosPage() {
+  const [selectedImage, setSelectedImage] = useState<null | {src: string, alt: string}>(null);
+
   return (
     <div className="pt-32 pb-24 min-h-screen bg-white text-charcoal px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-16">
@@ -22,13 +28,24 @@ export default function PedidosPersonalizadosPage() {
             { src: "pers_equipos_multimedia.jpg", alt: "Equipos y Eventos" },
             { src: "pers_eventos_especiales.jpg", alt: "Personalizados Ministerios" }
           ].map((img, i) => (
-            <div key={i} className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-lg border border-black/5 group">
-              <Image
-                src={`/imagenes_personalizados/${img.src}`}
-                alt={img.alt}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
-              />
+            <div key={i} className="flex flex-col gap-4 group">
+              <div 
+                className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-sm border border-black/5 cursor-pointer group-hover:shadow-xl transition-all duration-500"
+                onClick={() => setSelectedImage(img)}
+              >
+                <Image
+                  src={`/imagenes_personalizados/${img.src}`}
+                  alt={img.alt}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/10 transition-colors duration-300 flex items-center justify-center">
+                  <span className="opacity-0 group-hover:opacity-100 bg-white/90 backdrop-blur-sm text-charcoal text-xs font-bold px-4 py-2 rounded-full transition-all duration-300 shadow-sm translate-y-2 group-hover:translate-y-0">
+                    Ampliar
+                  </span>
+                </div>
+              </div>
+              <h3 className="font-sans font-semibold text-charcoal text-center text-lg">{img.alt}</h3>
             </div>
           ))}
         </div>
@@ -83,6 +100,35 @@ export default function PedidosPersonalizadosPage() {
           </form>
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-charcoal/90 backdrop-blur-md"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
+            onClick={() => setSelectedImage(null)}
+          >
+            <X size={24} />
+          </button>
+          
+          <div 
+            className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={`/imagenes_personalizados/${selectedImage.src}`}
+              alt={selectedImage.alt}
+              width={1200}
+              height={1600}
+              className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"
+            />
+            <p className="mt-4 font-sans font-semibold text-white/90 text-lg">{selectedImage.alt}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
