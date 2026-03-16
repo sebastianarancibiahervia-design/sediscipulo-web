@@ -73,10 +73,7 @@ export default function HeroSection() {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
-          <div className="hero-element inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-xs font-mono text-white/90 mb-8 tracking-wide backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-emerald-400/80 animate-pulse border border-white/20"></span>
-            Nueva Colección Disponible
-          </div>
+
           
           <h1 className="hero-element text-5xl md:text-7xl font-sans font-bold text-white leading-tight mb-6 tracking-tight">
             Eleva tu estilo con{" "}
@@ -86,7 +83,7 @@ export default function HeroSection() {
           </h1>
           
           <p className="hero-element text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
-            Diseños premium, algodón de alto gramaje y mensaje pastoral. No es solo vestimenta; es un testimonio vivo que acompaña tu caminar.
+            Diseños alineados a la verdad bíblica, mezclados con materiales de calidad. No es solo vestimenta; es un testimonio vivo que acompaña tu caminar.
           </p>
           
           <div className="hero-element flex flex-col sm:flex-row items-center justify-center gap-4">
