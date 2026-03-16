@@ -63,7 +63,7 @@ export default function HeroSection() {
           src="/maranata-back.jpg" 
           alt="Nueva colección" 
           fill 
-          className="object-cover opacity-80 mix-blend-overlay"
+          className="object-cover opacity-80 mix-blend-overlay blur-md scale-105"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/30 via-transparent to-charcoal line-noise"></div>
