@@ -212,17 +212,10 @@ export default function Navbar() {
               <h3 className="text-2xl font-sans font-bold text-charcoal mb-2">Únete a la Familia</h3>
               <p className="text-charcoal/60 text-sm">Regístrate para compras más rápidas, seguimiento de pedidos y acceso a diseños exclusivos.</p>
             </div>
-            {/* For Netlify Forms parsing */}
-            <form name="registro" data-netlify="true" netlify-honeypot="bot-field" hidden>
-              <input type="text" name="nombre" />
-              <input type="tel" name="telefono" />
-              <input type="email" name="email" />
-            </form>
-
-            <form className="space-y-4" name="registro" method="POST" data-netlify="true" onSubmit={(e) => { 
+            <form className="space-y-4" name="registro" onSubmit={(e) => { 
               e.preventDefault(); 
               const formData = new FormData(e.currentTarget);
-              fetch("/", {
+              fetch("/__forms.html", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams(Array.from(formData.entries()) as [string, string][]).toString(),

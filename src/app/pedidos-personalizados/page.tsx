@@ -59,21 +59,19 @@ export default function PedidosPersonalizadosPage() {
             <p className="text-charcoal/60 mt-2">Completa el formulario y te contactaremos a la brevedad.</p>
           </div>
 
-          {/* For Netlify Forms to work in Next.js App Router, we need a static hidden form that Netlify can parse at build time */}
-          <form name="personalizados" data-netlify="true" netlify-honeypot="bot-field" hidden>
-            <input type="text" name="nombre" />
-            <input type="tel" name="telefono" />
-            <input type="email" name="email" />
-            <textarea name="detalles"></textarea>
-            <input type="file" name="referencia" />
-          </form>
-
           <form 
             name="personalizados" 
-            method="POST" 
-            data-netlify="true"
-            encType="multipart/form-data" 
             className="space-y-6 max-w-2xl mx-auto"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              fetch("/__forms.html", {
+                method: "POST",
+                body: formData,
+              })
+              .then(() => alert("¡Solicitud enviada exitosamente!"))
+              .catch(() => alert("Hubo un error al enviar el formulario."));
+            }}
           >
             <input type="hidden" name="form-name" value="personalizados" />
             

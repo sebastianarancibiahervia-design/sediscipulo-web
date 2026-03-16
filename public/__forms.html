@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>Netlify Forms Parsing</title>
+  </head>
+  <body>
+    <!-- 1. Pedidos Personalizados -->
+    <form name="personalizados" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="nombre" />
+      <input type="tel" name="telefono" />
+      <input type="email" name="email" />
+      <textarea name="detalles"></textarea>
+      <input type="file" name="referencia" />
+    </form>
+
+    <!-- 2. Registro de Usuario -->
+    <form name="registro" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="nombre" />
+      <input type="tel" name="telefono" />
+      <input type="email" name="email" />
+    </form>
+
+    <!-- 3. Cotización Bento -->
+    <form name="cotizacion" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="nombre" />
+      <input type="tel" name="telefono" />
+      <input type="email" name="correo" />
+      <textarea name="detalle"></textarea>
+    </form>
+  </body>
+</html>

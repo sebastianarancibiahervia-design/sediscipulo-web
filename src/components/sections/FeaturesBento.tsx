@@ -15,7 +15,7 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    fetch("/", {
+    fetch("/__forms.html", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams(Array.from(formData.entries()) as [string, string][]).toString(),
@@ -62,16 +62,7 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
               </button>
             </div>
           ) : (
-            <>
-              {/* For Netlify Forms to detect fields in Next.js build */}
-              <form name="cotizacion" data-netlify="true" netlify-honeypot="bot-field" hidden>
-                <input type="text" name="nombre" />
-                <input type="tel" name="telefono" />
-                <input type="email" name="correo" />
-                <textarea name="detalle"></textarea>
-              </form>
-
-              <form onSubmit={handleSubmit} name="cotizacion" method="POST" data-netlify="true" className="space-y-4">
+              <form onSubmit={handleSubmit} name="cotizacion" className="space-y-4">
                 <input type="hidden" name="form-name" value="cotizacion" />
               {[
                 { id: "nombre", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
@@ -114,7 +105,6 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
                 Enviar solicitud
               </button>
             </form>
-          </>
           )}
         </div>
       </div>
