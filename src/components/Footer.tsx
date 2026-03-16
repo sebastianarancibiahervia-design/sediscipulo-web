@@ -61,6 +61,14 @@ export default function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-black/5 text-sm gap-4 text-charcoal/60">
           <p>© {new Date().getFullYear()} SeDiscipulo. Todos los derechos reservados.</p>
+          <a 
+            href="https://agenciatab.cl" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-charcoal transition-colors"
+          >
+            Powered by Agencia Tab
+          </a>
         </div>
       </div>
     </footer>
