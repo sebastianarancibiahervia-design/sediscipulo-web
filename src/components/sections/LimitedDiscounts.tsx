@@ -34,7 +34,7 @@ export default function LimitedDiscounts() {
   const placeholders = [
     { 
       id: "maranata-back", 
-      name: "Maranata Back - Oversized", 
+      name: "Maranata Back - Polera Oversized", 
       oldPrice: "$18.000", 
       newPrice: "$16.200",
       image: "/maranata-back.jpg",
