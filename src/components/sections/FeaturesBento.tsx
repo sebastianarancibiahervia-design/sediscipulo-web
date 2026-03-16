@@ -62,8 +62,17 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} name="cotizacion" method="POST" data-netlify="true" className="space-y-4">
-              <input type="hidden" name="form-name" value="cotizacion" />
+            <>
+              {/* For Netlify Forms to detect fields in Next.js build */}
+              <form name="cotizacion" data-netlify="true" netlify-honeypot="bot-field" hidden>
+                <input type="text" name="nombre" />
+                <input type="tel" name="telefono" />
+                <input type="email" name="correo" />
+                <textarea name="detalle"></textarea>
+              </form>
+
+              <form onSubmit={handleSubmit} name="cotizacion" method="POST" data-netlify="true" className="space-y-4">
+                <input type="hidden" name="form-name" value="cotizacion" />
               {[
                 { id: "nombre", label: "Nombre", type: "text", placeholder: "Tu nombre completo" },
                 { id: "telefono", label: "Número de teléfono", type: "tel", placeholder: "+56 9 XXXX XXXX" },
@@ -105,6 +114,7 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
                 Enviar solicitud
               </button>
             </form>
+          </>
           )}
         </div>
       </div>

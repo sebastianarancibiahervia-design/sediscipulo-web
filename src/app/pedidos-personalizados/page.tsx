@@ -24,9 +24,9 @@ export default function PedidosPersonalizadosPage() {
         {/* Gallery */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
           {[
-            { src: "pers_campamento_jovenes.jpg", alt: "Pedidos para Campamentos" },
-            { src: "pers_equipos_multimedia.jpg", alt: "Equipos y Eventos" },
-            { src: "pers_eventos_especiales.jpg", alt: "Personalizados Ministerios" }
+            { src: "pers_campamento_jovenes.jpg", alt: "Campamentos" },
+            { src: "pers_equipos_multimedia.jpg", alt: "Equipos de servicio" },
+            { src: "pers_eventos_especiales.jpg", alt: "Eventos especiales" }
           ].map((img, i) => (
             <div key={i} className="flex flex-col gap-4 group">
               <div 
@@ -59,10 +59,19 @@ export default function PedidosPersonalizadosPage() {
             <p className="text-charcoal/60 mt-2">Completa el formulario y te contactaremos a la brevedad.</p>
           </div>
 
+          {/* For Netlify Forms to work in Next.js App Router, we need a static hidden form that Netlify can parse at build time */}
+          <form name="personalizados" data-netlify="true" netlify-honeypot="bot-field" hidden>
+            <input type="text" name="nombre" />
+            <input type="tel" name="telefono" />
+            <input type="email" name="email" />
+            <textarea name="detalles"></textarea>
+            <input type="file" name="referencia" />
+          </form>
+
           <form 
             name="personalizados" 
             method="POST" 
-            data-netlify="true" 
+            data-netlify="true"
             encType="multipart/form-data" 
             className="space-y-6 max-w-2xl mx-auto"
           >

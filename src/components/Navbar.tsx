@@ -212,7 +212,13 @@ export default function Navbar() {
               <h3 className="text-2xl font-sans font-bold text-charcoal mb-2">Únete a la Familia</h3>
               <p className="text-charcoal/60 text-sm">Regístrate para compras más rápidas, seguimiento de pedidos y acceso a diseños exclusivos.</p>
             </div>
-            
+            {/* For Netlify Forms parsing */}
+            <form name="registro" data-netlify="true" netlify-honeypot="bot-field" hidden>
+              <input type="text" name="nombre" />
+              <input type="tel" name="telefono" />
+              <input type="email" name="email" />
+            </form>
+
             <form className="space-y-4" name="registro" method="POST" data-netlify="true" onSubmit={(e) => { 
               e.preventDefault(); 
               const formData = new FormData(e.currentTarget);
@@ -226,15 +232,15 @@ export default function Navbar() {
               <input type="hidden" name="form-name" value="registro" />
               <div>
                 <label className="block text-xs font-mono font-medium text-charcoal/70 mb-1.5 uppercase tracking-wider">Nombre Completo</label>
-                <input required type="text" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="Ej. Juan Pérez" />
+                <input required type="text" name="nombre" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="Ej. Juan Pérez" />
               </div>
               <div>
                 <label className="block text-xs font-mono font-medium text-charcoal/70 mb-1.5 uppercase tracking-wider">Número de Teléfono</label>
-                <input required type="tel" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="+56 9 1234 5678" />
+                <input required type="tel" name="telefono" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="+56 9 1234 5678" />
               </div>
               <div>
                 <label className="block text-xs font-mono font-medium text-charcoal/70 mb-1.5 uppercase tracking-wider">Correo Electrónico</label>
-                <input required type="email" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="tu@correo.com" />
+                <input required type="email" name="email" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="tu@correo.com" />
               </div>
               
               <button type="submit" className="w-full mt-6 py-4 bg-charcoal text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all hover:scale-[1.02] shadow-sm">
