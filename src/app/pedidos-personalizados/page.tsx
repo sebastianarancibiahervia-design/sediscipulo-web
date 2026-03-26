@@ -3,12 +3,73 @@
 import Image from "next/image";
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function PedidosPersonalizadosPage() {
   const [selectedImage, setSelectedImage] = useState<null | {src: string, alt: string}>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const nombre = formData.get("nombre") as string;
+      const telefono = formData.get("telefono") as string;
+      const email = formData.get("email") as string;
+      const detalles = formData.get("detalles") as string;
+      const file = formData.get("referencia") as File;
+
+      let imagen_url = null;
+
+      // 1. Upload image if exists
+      if (file && file.size > 0) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("form_personalizados")
+          .upload(fileName, file);
+        
+        if (uploadError) throw uploadError;
+        imagen_url = fileName;
+      }
+
+      // 2. Check if client already exists by email
+      const { data: existingClient } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("email", email)
+        .single();
+
+      // 3. Insert into form_personalizados
+      const { error: insertError } = await supabase
+        .from("form_personalizados")
+        .insert({
+          nombre,
+          numero: telefono,
+          correo: email,
+          detalles,
+          imagen_url,
+          id_cliente: existingClient?.id || null
+        });
+
+      if (insertError) throw insertError;
+
+      router.push("/pedidos-personalizados/gracias");
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      alert("Hubo un error al enviar tu solicitud: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="pt-32 pb-24 min-h-screen bg-white text-charcoal px-4 sm:px-6 lg:px-8">
+      {/* ... (rest of the code remains similar except onSubmit handling) */}
       <div className="max-w-4xl mx-auto space-y-16">
         {/* Header */}
         <div className="text-center space-y-6">
@@ -60,21 +121,9 @@ export default function PedidosPersonalizadosPage() {
           </div>
 
           <form 
-            name="personalizados" 
             className="space-y-6 max-w-2xl mx-auto"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              fetch("/__forms.html", {
-                method: "POST",
-                body: formData,
-              })
-              .then(() => alert("¡Solicitud enviada exitosamente!"))
-              .catch(() => alert("Hubo un error al enviar el formulario."));
-            }}
+            onSubmit={handleSubmit}
           >
-            <input type="hidden" name="form-name" value="personalizados" />
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label htmlFor="nombre" className="text-sm font-semibold text-charcoal/80">Nombre Completo</label>
@@ -101,8 +150,8 @@ export default function PedidosPersonalizadosPage() {
               <input type="file" id="referencia" name="referencia" accept="image/*" className="w-full bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm text-charcoal/60 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-charcoal/5 file:text-charcoal hover:file:bg-charcoal/10" />
             </div>
 
-            <button type="submit" className="w-full bg-charcoal text-white font-bold py-4 rounded-xl hover:bg-black transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5">
-              Enviar Solicitud
+            <button disabled={loading} type="submit" className="w-full bg-charcoal text-white font-bold py-4 rounded-xl hover:bg-black transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50">
+              {loading ? "Enviando..." : "Enviar Solicitud"}
             </button>
           </form>
         </div>

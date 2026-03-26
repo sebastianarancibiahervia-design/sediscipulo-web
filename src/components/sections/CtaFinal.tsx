@@ -19,7 +19,7 @@ export default function CtaFinal() {
               href="/tienda"
               className="inline-flex items-center justify-center gap-2 px-10 py-5 bg-charcoal text-white rounded-full text-lg font-bold transition-all hover:bg-black hover:scale-105 hover:shadow-xl active:scale-95"
             >
-              Ver Colección Completa
+              Ver Toda la Tienda
               <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
             </Link>
           </div>

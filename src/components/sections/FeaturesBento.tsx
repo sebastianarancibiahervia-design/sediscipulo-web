@@ -5,6 +5,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BookOpen, Shirt, PackageOpen, X } from "lucide-react";
+import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -152,16 +153,16 @@ export default function FeaturesBento() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[360px]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[420px]">
 
-            {/* Card 1: Verdad Bíblica — Imagen editorial de fondo */}
-            <div className="bento-card group relative col-span-1 md:col-span-2 rounded-3xl overflow-hidden shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-xl flex flex-col justify-end p-8">
+            {/* Card 1: Verdad Bíblica — Imagen editorial de fondo (FULL WIDTH) */}
+            <div className="bento-card group relative col-span-1 md:col-span-3 rounded-3xl overflow-hidden shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-xl flex flex-col justify-end p-8">
               <Image
                 src="/imagen_colgador.jpg"
                 alt="Prendas SeDiscipulo"
                 fill
                 className="object-cover grayscale group-hover:scale-105 transition-transform duration-700"
-                sizes="(max-width: 768px) 100vw, 66vw"
+                sizes="(max-width: 768px) 100vw, 100vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10" />
 
@@ -189,51 +190,26 @@ export default function FeaturesBento() {
               </div>
             </div>
 
-            {/* Card 2: Alto Gramaje */}
-            <div className="bento-card group relative col-span-1 rounded-3xl bg-white border border-black/5 overflow-hidden shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-xl p-8 flex flex-col justify-between">
-              <div className="w-full mt-4 mb-8">
-                <div className="flex justify-between items-end mb-2">
-                  <span className="font-mono text-xs text-charcoal/50 font-semibold">Grosor / GSM</span>
-                  <span className="font-mono gap-1 font-bold text-charcoal text-xl flex items-baseline">
-                    <span className="block tabular-nums transition-all">180</span>
-                    <span className="text-xs text-charcoal/40 font-normal">→ 350+</span>
-                  </span>
-                </div>
-                <div className="h-3 w-full bg-black/5 rounded-full overflow-hidden relative border border-black/5">
-                  <div className="absolute top-0 left-0 h-full w-[40%] bg-black/10 rounded-full"></div>
-                  <div className="absolute top-0 left-0 h-full w-[40%] bg-charcoal rounded-full origin-left group-hover:w-[95%] transition-all duration-1000 ease-out"></div>
-                </div>
-              </div>
-
-              <div className="relative z-20">
-                <div className="w-12 h-12 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center mb-6 text-charcoal">
-                  <Shirt size={24} />
-                </div>
-                <h3 className="text-2xl font-bold font-sans text-charcoal mb-2">Algodón Premium</h3>
-                <p className="text-charcoal/60">Telas de alto gramaje que resisten lavados y mantienen su forma.</p>
-              </div>
-            </div>
-
-            {/* Card 3: Al por mayor */}
-            <div className="bento-card relative col-span-1 md:col-span-3 rounded-3xl bg-[#1A1A1A] border border-black/10 overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            {/* Card 3: Personalizados (VERTICALMENTE MÁS GRANDE) */}
+            <div className="bento-card relative col-span-1 md:col-span-3 md:row-span-1 rounded-3xl bg-[#1A1A1A] border border-black/10 overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] p-8 md:p-16 flex flex-col md:flex-row items-center gap-8 md:gap-12 min-h-[500px]">
 
               {/* Texto izquierdo */}
-              <div className="flex-shrink-0 md:w-80 relative z-20">
+              <div className="flex-shrink-0 md:w-96 relative z-20">
                 <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-6 text-white">
                   <PackageOpen size={24} />
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold font-sans text-white mb-4">Diseños Personalizados al por Mayor</h3>
-                <p className="text-white/70 text-base mb-4">Ideal para retiros espirituales, iglesias o ministerios enteros. Adaptamos el diseño a la visión de tu congregación.</p>
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="px-6 py-2.5 rounded-full bg-white text-[#1A1A1A] text-sm font-bold shadow-md hover:scale-105 active:scale-95 transition-all"
+                <h3 className="text-3xl md:text-4xl font-bold font-sans text-white mb-4">Diseños Personalizados para tu Congregación</h3>
+                <p className="text-white/70 text-lg mb-8 leading-relaxed">Realizamos prendas exclusivas con alta fidelidad para ministerios, congregaciones o grupos. Nos adaptamos a tu visión para glorificar a Dios.</p>
+                <Link
+                  href="/pedidos-personalizados"
+                  className="inline-flex items-center px-10 py-4 rounded-full bg-white text-[#1A1A1A] font-bold shadow-lg hover:scale-105 active:scale-95 transition-all text-base"
                 >
-                  Solicitar Cotización
-                </button>
+                  Ver Pedidos Personalizados
+                </Link>
               </div>
 
               {/* Galería acordeón */}
-              <div className="flex flex-1 gap-3 h-48 md:h-56 w-full overflow-hidden rounded-2xl">
+              <div className="flex flex-1 gap-3 h-64 md:h-80 w-full overflow-hidden rounded-2xl">
                 {[
                   { src: "/imagenes_personalizados/pers_campamento_jovenes.jpg", label: "Campamento" },
                   { src: "/imagenes_personalizados/pers_eventos_especiales.jpg", label: "Eventos especiales" },

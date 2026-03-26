@@ -5,13 +5,30 @@ import { ShoppingBag, Menu, User, X, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import Image from "next/image";
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTiendaOpen, setIsTiendaOpen] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const { items, itemsCount, cartTotal, removeFromCart } = useCart();
+
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <>
@@ -42,8 +59,6 @@ export default function Navbar() {
                 className={`absolute top-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 w-48 bg-white/95 backdrop-blur-xl border border-black/10 rounded-2xl shadow-xl flex flex-col py-2 overflow-hidden transition-all duration-200 ${isTiendaOpen ? 'opacity-100 visible pointer-events-auto translate-y-0' : 'opacity-0 invisible pointer-events-none -translate-y-2'}`}
               >
                 <Link href="/tienda" onClick={() => setIsTiendaOpen(false)} className="px-5 py-2 hover:bg-black/5 text-sm font-medium text-charcoal/80 hover:text-black transition-colors">Ver todo</Link>
-                <Link href="/tienda?categoria=Textil" onClick={() => setIsTiendaOpen(false)} className="px-5 py-2 hover:bg-black/5 text-sm font-medium text-charcoal/80 hover:text-black transition-colors">Textil</Link>
-                <Link href="/tienda?categoria=Accesorios" onClick={() => setIsTiendaOpen(false)} className="px-5 py-2 hover:bg-black/5 text-sm font-medium text-charcoal/80 hover:text-black transition-colors">Accesorios</Link>
               </div>
             </div>
             <Link href="/nosotros" className="text-sm font-medium text-charcoal/80 hover:text-black transition-colors duration-300">
@@ -59,13 +74,13 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="hidden md:flex items-center space-x-6">
-            <button 
-              onClick={() => setIsLoginOpen(true)}
+            <Link 
+              href={user ? "/perfil" : "/auth/login"}
               className="text-sm font-medium text-charcoal flex items-center gap-2 hover:text-black transition-colors"
             >
               <User size={16} />
-              <span className="hidden lg:block">Iniciar Sesión</span>
-            </button>
+              <span className="hidden lg:block">{user ? "Mi Cuenta" : "Iniciar Sesión"}</span>
+            </Link>
             <button
               onClick={() => setIsCartOpen(!isCartOpen)}
               className="group relative flex items-center justify-center gap-2 px-6 py-2.5 bg-charcoal text-white rounded-xl text-sm font-semibold transition-all hover:bg-black hover:shadow-[0_0_20px_rgba(0,0,0,0.2)] hover:-translate-y-0.5"
@@ -112,9 +127,13 @@ export default function Navbar() {
             <Link href="/blog" className="block text-base font-medium text-charcoal/80 hover:text-black">Blog</Link>
             <hr className="border-black/5 my-4" />
             <div className="flex items-center gap-4">
-              <button onClick={() => { setIsLoginOpen(true); setIsMobileMenuOpen(false); }} className="text-base font-medium text-charcoal flex items-center gap-2">
-                <User size={18} /> Iniciar Sesión
-              </button>
+              <Link 
+                href={user ? "/perfil" : "/auth/login"}
+                onClick={() => setIsMobileMenuOpen(false)} 
+                className="text-base font-medium text-charcoal flex items-center gap-2"
+              >
+                <User size={18} /> {user ? "Mi Cuenta" : "Iniciar Sesión"}
+              </Link>
             </div>
           </div>
         </div>
@@ -198,52 +217,6 @@ export default function Navbar() {
       </>
     )}
 
-    {/* Login Modal */}
-    {isLoginOpen && (
-      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={() => setIsLoginOpen(false)} />
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden border border-black/5 animate-in fade-in zoom-in-95 duration-200">
-          <div className="p-8">
-            <button onClick={() => setIsLoginOpen(false)} className="absolute top-6 right-6 p-2 text-charcoal/40 hover:text-charcoal hover:bg-black/5 rounded-full transition-colors">
-              <X size={20} />
-            </button>
-            
-            <div className="mb-8">
-              <h3 className="text-2xl font-sans font-bold text-charcoal mb-2">Únete a la Familia</h3>
-              <p className="text-charcoal/60 text-sm">Regístrate para compras más rápidas, seguimiento de pedidos y acceso a diseños exclusivos.</p>
-            </div>
-            <form className="space-y-4" name="registro" onSubmit={(e) => { 
-              e.preventDefault(); 
-              const formData = new FormData(e.currentTarget);
-              fetch("/__forms.html", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams(Array.from(formData.entries()) as [string, string][]).toString(),
-              }).then(() => setIsLoginOpen(false))
-                .catch((error) => console.error(error));
-            }}>
-              <input type="hidden" name="form-name" value="registro" />
-              <div>
-                <label className="block text-xs font-mono font-medium text-charcoal/70 mb-1.5 uppercase tracking-wider">Nombre Completo</label>
-                <input required type="text" name="nombre" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="Ej. Juan Pérez" />
-              </div>
-              <div>
-                <label className="block text-xs font-mono font-medium text-charcoal/70 mb-1.5 uppercase tracking-wider">Número de Teléfono</label>
-                <input required type="tel" name="telefono" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="+56 9 1234 5678" />
-              </div>
-              <div>
-                <label className="block text-xs font-mono font-medium text-charcoal/70 mb-1.5 uppercase tracking-wider">Correo Electrónico</label>
-                <input required type="email" name="email" className="w-full px-4 py-3 bg-neutral-50 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/40 transition-all text-charcoal placeholder-charcoal/30" placeholder="tu@correo.com" />
-              </div>
-              
-              <button type="submit" className="w-full mt-6 py-4 bg-charcoal text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all hover:scale-[1.02] shadow-sm">
-                Continuar
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    )}
     </>
   );
 }
