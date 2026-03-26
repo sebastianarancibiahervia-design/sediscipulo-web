@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Outfit, Cormorant_Garamond, IBM_Plex_Mono } from "next/font/google";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { CartProvider } from "@/components/CartProvider";
+import ConditionalLayout from "@/components/ConditionalLayout";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -46,7 +44,9 @@ export default function RootLayout({
       <body
         className={`${plusJakarta?.variable || ''} ${outfit?.variable || ''} ${cormorant?.variable || ''} ${ibmPlex?.variable || ''} antialiased`}
       >
-        {children}
+        <ConditionalLayout>
+          {children}
+        </ConditionalLayout>
       </body>
     </html>
   );

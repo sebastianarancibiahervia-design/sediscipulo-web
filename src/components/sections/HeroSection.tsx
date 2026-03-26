@@ -16,7 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function HeroSection({ topProduct }: { topProduct: GroupedProduct | null }) {
   const heroRef = useRef<HTMLDivElement>(null);
   const mockupRef = useRef<HTMLDivElement>(null);
-  
+
   const displayProduct = topProduct || {
     name: "Maranata back oversized",
     slug: "maranata-back-oversized",
@@ -67,33 +67,33 @@ export default function HeroSection({ topProduct }: { topProduct: GroupedProduct
     <section ref={heroRef} className="relative pt-32 pb-20 bg-charcoal overflow-hidden perspective-[1200px]">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        <Image 
-          src="/cover-webpage.jpg" 
-          alt="SeDiscipulo Cover" 
-          fill 
-          className="object-cover opacity-60 mix-blend-overlay blur-md scale-105"
+        <Image
+          src="/cover-webpage.jpg"
+          alt="SeDiscipulo Cover"
+          fill
+          className="object-cover opacity-60 mix-blend-overlay blur-[0px] scale-105"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/30 via-transparent to-charcoal line-noise"></div>
       </div>
-      
+
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px] pointer-events-none z-0" />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
 
-          
+
           <h1 className="hero-element text-5xl md:text-7xl font-sans font-bold text-white leading-tight mb-6 tracking-tight">
             Eleva tu estilo con{" "}
             <span className="font-serif italic text-white/90 font-medium tracking-wide">
               verdad bíblica
             </span>
           </h1>
-          
+
           <p className="hero-element text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
             Diseños alineados a la verdad bíblica, mezclados con materiales de calidad. No es solo vestimenta; es un testimonio vivo que acompaña tu caminar.
           </p>
-          
+
           <div className="hero-element flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/tienda"
@@ -102,7 +102,7 @@ export default function HeroSection({ topProduct }: { topProduct: GroupedProduct
               <ShoppingCart size={18} />
               Comprar
             </Link>
-            <Link 
+            <Link
               href="/nosotros"
               className="group flex items-center justify-center gap-3 px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl text-base font-medium backdrop-blur-sm transition-all hover:bg-white/20 hover:border-white/30 w-full sm:w-auto"
             >
@@ -123,22 +123,22 @@ export default function HeroSection({ topProduct }: { topProduct: GroupedProduct
           >
             {/* The actual image fake dashboard/mockup */}
             <div className="w-full h-full relative bg-charcoal">
-               <Image 
+              <Image
                 src={displayProduct.imagePrincipal.startsWith('/') ? displayProduct.imagePrincipal : getProductImageUrl(displayProduct.imagePrincipal)}
                 alt={displayProduct.name}
                 fill
                 className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
-               />
-               <div className="absolute inset-0 bg-gradient-to-t from-charcoal w-full h-full mix-blend-multiply opacity-60"></div>
-               
-               {/* Overlay UI to make it feel more tool-like */}
-               <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 p-5 bg-charcoal/80 backdrop-blur-xl rounded-2xl border border-white/10 z-20 shadow-2xl transition-transform duration-500 hover:-translate-y-2">
-                 <p className="font-mono text-xs text-white/50 mb-2 uppercase tracking-widest">EL MÁS VENDIDO</p>
-                 <p className="font-outfit text-xl md:text-2xl font-bold text-white mb-3">{displayProduct.name}</p>
-                 <Link href={`/tienda/${displayProduct.slug}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white font-medium border-b border-white/20 pb-0.5 transition-colors">
-                   Ver Producto <ArrowRight size={14} />
-                 </Link>
-               </div>
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal w-full h-full mix-blend-multiply opacity-60"></div>
+
+              {/* Overlay UI to make it feel more tool-like */}
+              <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 p-5 bg-charcoal/80 backdrop-blur-xl rounded-2xl border border-white/10 z-20 shadow-2xl transition-transform duration-500 hover:-translate-y-2">
+                <p className="font-mono text-xs text-white/50 mb-2 uppercase tracking-widest">EL MÁS VENDIDO</p>
+                <p className="font-outfit text-xl md:text-2xl font-bold text-white mb-3">{displayProduct.name}</p>
+                <Link href={`/tienda/${displayProduct.slug}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white font-medium border-b border-white/20 pb-0.5 transition-colors">
+                  Ver Producto <ArrowRight size={14} />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
