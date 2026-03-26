@@ -100,7 +100,7 @@ export default function ComingSoonPage() {
           </div>
           <h2 className="text-4xl font-sans font-bold text-white mb-4">¡Te has unido a nuestra comunidad!</h2>
           <p className="text-white/60 mb-10 leading-relaxed">
-            Hemos enviado un correo de confirmación. Revisa tu bandeja de entrada para verificar tu cuenta y ser el primero en recibir beneficios exclusivos.
+            Serás de los primeros en conocer las novedades del lanzamiento oficial de nuestra web. ¡Mantente atento a tu correo, porque el lanzamiento vendrá con un regalito especial para ti!
           </p>
           <div className="pt-4">
             <Image src="/logo_sediscipulo.png" alt="SeDiscipulo" width={120} height={40} className="mx-auto opacity-50 contrast-125" />
