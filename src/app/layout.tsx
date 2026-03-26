@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   title: "SeDiscipulo | Tienda de ropa cristiana",
   description: "Diseños alineados a la verdad bíblica con calidad premium",
   icons: {
-    icon: "/logo_sediscipulo.png",
+    icon: "/favicon.ico",
   },
 };
 
