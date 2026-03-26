@@ -8,12 +8,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 
+import { GroupedProduct } from "@/lib/store/storeServices";
+import { getProductImageUrl } from "@/components/store/ProductCard";
+
 gsap.registerPlugin(ScrollTrigger);
 
-export default function HeroSection() {
+export default function HeroSection({ topProduct }: { topProduct: GroupedProduct | null }) {
   const heroRef = useRef<HTMLDivElement>(null);
   const mockupRef = useRef<HTMLDivElement>(null);
-  const { addToCart } = useCart();
+  
+  const displayProduct = topProduct || {
+    name: "Maranata back oversized",
+    slug: "maranata-back-oversized",
+    imagePrincipal: "/maranata-back.jpg"
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -60,10 +68,10 @@ export default function HeroSection() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image 
-          src="/maranata-back.jpg" 
-          alt="Nueva colección" 
+          src="/cover-webpage.jpg" 
+          alt="SeDiscipulo Cover" 
           fill 
-          className="object-cover opacity-80 mix-blend-overlay blur-md scale-105"
+          className="object-cover opacity-60 mix-blend-overlay blur-md scale-105"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/30 via-transparent to-charcoal line-noise"></div>
@@ -116,8 +124,8 @@ export default function HeroSection() {
             {/* The actual image fake dashboard/mockup */}
             <div className="w-full h-full relative bg-charcoal">
                <Image 
-                src="/maranata-back.jpg"
-                alt="Maranata back oversized Mockup"
+                src={displayProduct.imagePrincipal.startsWith('/') ? displayProduct.imagePrincipal : getProductImageUrl(displayProduct.imagePrincipal)}
+                alt={displayProduct.name}
                 fill
                 className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
                />
@@ -126,8 +134,8 @@ export default function HeroSection() {
                {/* Overlay UI to make it feel more tool-like */}
                <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 p-5 bg-charcoal/80 backdrop-blur-xl rounded-2xl border border-white/10 z-20 shadow-2xl transition-transform duration-500 hover:-translate-y-2">
                  <p className="font-mono text-xs text-white/50 mb-2 uppercase tracking-widest">EL MÁS VENDIDO</p>
-                 <p className="font-outfit text-xl md:text-2xl font-bold text-white mb-3">Maranata back oversized</p>
-                 <Link href="/tienda/maranata-back-oversized" className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white font-medium border-b border-white/20 pb-0.5 transition-colors">
+                 <p className="font-outfit text-xl md:text-2xl font-bold text-white mb-3">{displayProduct.name}</p>
+                 <Link href={`/tienda/${displayProduct.slug}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white font-medium border-b border-white/20 pb-0.5 transition-colors">
                    Ver Producto <ArrowRight size={14} />
                  </Link>
                </div>
