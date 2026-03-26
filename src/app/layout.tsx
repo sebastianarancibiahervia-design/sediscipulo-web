@@ -46,13 +46,7 @@ export default function RootLayout({
       <body
         className={`${plusJakarta?.variable || ''} ${outfit?.variable || ''} ${cormorant?.variable || ''} ${ibmPlex?.variable || ''} antialiased`}
       >
-        <CartProvider>
-          <Navbar />
-          <main className="min-h-screen pt-20">
-            {children}
-          </main>
-          <Footer />
-        </CartProvider>
+        {children}
       </body>
     </html>
   );
