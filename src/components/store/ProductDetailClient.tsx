@@ -221,7 +221,6 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
                     talla: matchedVariation.inventario_base?.talla || "",
                     quantity: 1
                   });
-                  alert("¡Producto añadido al carrito!");
                 }
               }}
               className={`w-full py-4 rounded-xl font-bold transition-colors ${

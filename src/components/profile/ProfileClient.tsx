@@ -23,8 +23,14 @@ import {
   MapPin,
   Fingerprint,
   Mail,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  Coins,
+  Copy,
+  Check,
+  Eye
 } from "lucide-react";
+import { uploadPaymentReceipt, processOrderPayment } from "@/lib/store/storeServices";
 import Image from "next/image";
 
 interface OrderDetailsModalProps {
@@ -32,8 +38,123 @@ interface OrderDetailsModalProps {
   onClose: () => void;
 }
 
+function PaymentModal({ order, onClose, onRefresh }: { order: any; onClose: () => void; onRefresh: () => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const text = `Sebastián Arancibia\n20.728.532-3\nBanco de Chile\nCuenta Vista\n00-011-88211-05\nsebastian.arancibiahervia@gmail.com`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!file) {
+      setError("Por favor selecciona una imagen del comprobante");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+    try {
+      const receiptPath = await uploadPaymentReceipt(file, order.numero);
+      await processOrderPayment(order, receiptPath);
+      onRefresh();
+      onClose();
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      setError(err.message || "Error al procesar el pago");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-charcoal/60 backdrop-blur-md" onClick={onClose} />
+      <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-xl relative z-10 overflow-hidden border border-black/10 animate-in fade-in zoom-in-95 duration-300">
+        <div className="p-10 md:p-12">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-2xl font-sans font-bold text-charcoal">Realizar Pago</h3>
+            <button onClick={onClose} className="p-2 text-charcoal/40 hover:bg-black/5 rounded-full"><X size={20} /></button>
+          </div>
+
+          <div className="mb-8 p-6 bg-neutral-50 rounded-2xl border border-black/5">
+            <p className="text-xs font-mono font-bold text-charcoal/40 uppercase tracking-widest mb-3">Monto a Transferir</p>
+            <p className="text-4xl font-mono font-bold text-charcoal">${order.monto_total?.toLocaleString('es-CL')}</p>
+          </div>
+
+          <div className="space-y-4 mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-sm font-bold text-charcoal uppercase tracking-wider underline decoration-clay/30 underline-offset-4">Datos de Transferencia</h4>
+              <button 
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 hover:bg-black/10 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
+              >
+                {copied ? <><Check size={12} className="text-green-600" /> Copiado</> : <><Copy size={12} /> Copiar Datos</>}
+              </button>
+            </div>
+            <div className="grid grid-cols-[80px_1fr] md:grid-cols-[110px_1fr] gap-x-4 gap-y-3 text-sm">
+              <span className="text-charcoal/40 font-medium whitespace-nowrap">Nombre:</span> <span className="font-bold">Sebastián Arancibia</span>
+              <span className="text-charcoal/40 font-medium whitespace-nowrap">RUT:</span> <span className="font-bold">20.728.532-3</span>
+              <span className="text-charcoal/40 font-medium whitespace-nowrap">Banco:</span> <span className="font-bold">Banco de Chile</span>
+              <span className="text-charcoal/40 font-medium whitespace-nowrap">Tipo:</span> <span className="font-bold">Cuenta Vista</span>
+              <span className="text-charcoal/40 font-medium whitespace-nowrap">Cuenta:</span> <span className="font-bold">00-011-88211-05</span>
+              <span className="text-charcoal/40 font-medium whitespace-nowrap">Email:</span> <span className="font-bold break-all">sebastian.arancibiahervia@gmail.com</span>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-black/5">
+            <label className="block text-sm font-bold text-charcoal mb-4">Cargar Comprobante</label>
+            <div className="relative group">
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleFileChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div className={`w-full py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all ${file ? 'border-green-400 bg-green-50/30' : 'border-black/10 group-hover:border-charcoal/30'}`}>
+                {file ? (
+                  <>
+                    <CheckCircle2 className="text-green-500 mb-2" size={32} />
+                    <span className="text-xs font-bold text-green-700 truncate max-w-[200px]">{file.name}</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="text-charcoal/20 mb-2" size={32} />
+                    <span className="text-xs font-bold text-charcoal/40">Haz clic o arrastra una imagen</span>
+                  </>
+                )}
+              </div>
+            </div>
+            {error && <p className="text-red-500 text-xs mt-3 font-medium">{error}</p>}
+          </div>
+
+          <button 
+            onClick={handleSubmit}
+            disabled={!file || uploading}
+            className="w-full mt-8 py-5 bg-charcoal text-white rounded-2xl font-bold hover:bg-black transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-black/10"
+          >
+            {uploading ? <Loader2 size={24} className="animate-spin" /> : "Informar Pago"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
   const router = useRouter();
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const handleProductLink = (item: any) => {
     if (item.tienda?.activo && item.tienda?.categoria === 'SEDISCIPULO') {
@@ -46,66 +167,122 @@ function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden border border-black/5 animate-in fade-in zoom-in-95 duration-200">
-        <div className="p-8">
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <h3 className="text-2xl font-sans font-bold text-charcoal">Detalle del Pedido</h3>
-              <p className="text-charcoal/60 text-sm">Realizado el {new Date(order.created_at).toLocaleDateString('es-CL')}</p>
+    <>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm" onClick={onClose} />
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden border border-black/5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-8">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h3 className="text-2xl font-sans font-bold text-charcoal">Detalle del Pedido</h3>
+                <p className="text-charcoal/60 text-sm">Realizado el {new Date(order.created_at).toLocaleDateString('es-CL')}</p>
+              </div>
+              <button onClick={onClose} className="p-2 text-charcoal/40 hover:text-charcoal hover:bg-black/5 rounded-full transition-colors">
+                <X size={24} />
+              </button>
             </div>
-            <button onClick={onClose} className="p-2 text-charcoal/40 hover:text-charcoal hover:bg-black/5 rounded-full transition-colors">
-              <X size={24} />
-            </button>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="p-4 bg-neutral-50 rounded-2xl border border-black/5">
-              <p className="text-[10px] font-mono font-bold text-charcoal/40 uppercase tracking-widest mb-1">Estado Pedido</p>
-              <p className="text-sm font-bold text-charcoal">{order.estado_pedido || 'Confirmado'}</p>
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="p-4 bg-neutral-50 rounded-2xl border border-black/5">
+                <p className="text-[10px] font-mono font-bold text-charcoal/40 uppercase tracking-widest mb-1">Estado Pedido</p>
+                <p className="text-sm font-bold text-charcoal">{order.estado_pedido || 'Stock por confirmar'}</p>
+              </div>
+              <div className="p-4 bg-neutral-50 rounded-2xl border border-black/5">
+                <p className="text-[10px] font-mono font-bold text-charcoal/40 uppercase tracking-widest mb-1">Estado Pago</p>
+                <p className="text-sm font-bold text-charcoal">{order.estado_pago || 'Pendiente'}</p>
+              </div>
             </div>
-            <div className="p-4 bg-neutral-50 rounded-2xl border border-black/5">
-              <p className="text-[10px] font-mono font-bold text-charcoal/40 uppercase tracking-widest mb-1">Estado Pago</p>
-              <p className="text-sm font-bold text-charcoal">{order.estado_pago || 'Pendiente'}</p>
-            </div>
-          </div>
 
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
-            {order.detalle_ventas?.map((detalle: any) => (
-              <div key={detalle.id} className="flex gap-4 p-4 rounded-2xl border border-black/5 bg-white group hover:border-charcoal/20 transition-all">
-                <div className="relative w-20 h-24 bg-neutral-50 rounded-xl overflow-hidden border border-black/5 flex-shrink-0">
-                  <Image 
-                    src={`${process.env.NEXT_PUBLIC_CRM_BASE_URL}${detalle.tienda?.imagen_url || '/placeholder.png'}`}
-                    alt={detalle.tienda?.producto_tienda || "Producto"}
-                    fill
-                    className="object-cover"
-                  />
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+              {order.detalle_ventas?.map((detalle: any) => (
+                <div key={detalle.id} className="flex gap-4 p-4 rounded-2xl border border-black/5 bg-white group hover:border-charcoal/20 transition-all">
+                  <div className="relative w-20 h-24 bg-neutral-50 rounded-xl overflow-hidden border border-black/5 flex-shrink-0">
+                    <Image 
+                      src={`${process.env.NEXT_PUBLIC_CRM_BASE_URL}${detalle.tienda?.imagen_url || '/placeholder.png'}`}
+                      alt={detalle.tienda?.producto_tienda || "Producto"}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <h4 className="font-bold text-charcoal leading-tight mb-1">{detalle.tienda?.producto_tienda || "Item Especial"}</h4>
+                    <p className="text-xs text-charcoal/60 mb-2">Cantidad: {detalle.cantidad} • ${detalle.valor_unitario?.toLocaleString('es-CL')} c/u</p>
+                    <button 
+                      onClick={() => handleProductLink(detalle)}
+                      className="text-xs font-bold text-charcoal flex items-center gap-1.5 hover:underline"
+                    >
+                      Ver en tienda <ExternalLink size={12} />
+                    </button>
+                  </div>
+                  <div className="text-right flex flex-col justify-center">
+                    <p className="text-sm font-mono font-bold text-charcoal">${detalle.valor_total?.toLocaleString('es-CL')}</p>
+                  </div>
                 </div>
-                <div className="flex-1 flex flex-col justify-center">
-                  <h4 className="font-bold text-charcoal leading-tight mb-1">{detalle.tienda?.producto_tienda || "Item Especial"}</h4>
-                  <p className="text-xs text-charcoal/60 mb-2">Cantidad: {detalle.cantidad} • ${detalle.valor_unitario?.toLocaleString('es-CL')} c/u</p>
+              ))}
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-black/5 space-y-4">
+              {order.cupones && (
+                <div className="flex justify-between items-center text-green-600 bg-green-50/50 p-4 rounded-2xl border border-green-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 bg-green-100 rounded">CUPÓN</span>
+                    <span className="font-bold">{order.cupones.codigo}</span>
+                  </div>
+                  <span className="font-mono font-bold">-${order.monto_descuento?.toLocaleString('es-CL')}</span>
+                </div>
+              )}
+              
+              <div className="flex justify-between items-center px-2">
+                <span className="text-lg font-medium text-charcoal/60">Total Pedido</span>
+                <span className="text-3xl font-mono font-bold text-charcoal">${order.monto_total?.toLocaleString('es-CL')}</span>
+              </div>
+
+              {order.movimientos?.[0]?.comprobante_url && (
+                <div className="mt-6 pt-6 border-t border-black/5">
                   <button 
-                    onClick={() => handleProductLink(detalle)}
-                    className="text-xs font-bold text-charcoal flex items-center gap-1.5 hover:underline"
+                    onClick={() => setShowReceipt(true)}
+                    className="w-full py-4 bg-neutral-50 hover:bg-black/5 border border-black/5 rounded-2xl flex items-center justify-center gap-3 text-sm font-bold text-charcoal transition-all group"
                   >
-                    Ver en tienda <ExternalLink size={12} />
+                    <Eye size={18} className="text-charcoal/40 group-hover:text-charcoal transition-colors" /> Ver Comprobante de Pago
                   </button>
                 </div>
-                <div className="text-right flex flex-col justify-center">
-                  <p className="text-sm font-mono font-bold text-charcoal">${detalle.valor_total?.toLocaleString('es-CL')}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-black/5 flex justify-between items-center">
-            <span className="text-lg font-medium text-charcoal/60">Total Pedido</span>
-            <span className="text-3xl font-mono font-bold text-charcoal">${order.valor_total?.toLocaleString('es-CL')}</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {showReceipt && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-charcoal/60 backdrop-blur-md" onClick={() => setShowReceipt(false)} />
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden border border-black/10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h4 className="text-lg font-bold text-charcoal">Comprobante de Pago</h4>
+                <button onClick={() => setShowReceipt(false)} className="p-2 text-charcoal/40 hover:bg-black/5 rounded-full"><X size={20} /></button>
+              </div>
+              <div className="relative aspect-[4/3] bg-neutral-50 rounded-2xl overflow-hidden border border-black/5 shadow-inner">
+                <img 
+                  src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/movimientos_bancarios/${order.movimientos[0].comprobante_url}`} 
+                  alt="Comprobante de pago"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="mt-6 flex gap-3">
+                <a 
+                  href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/movimientos_bancarios/${order.movimientos[0].comprobante_url}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 py-4 bg-charcoal text-white rounded-xl font-bold text-center hover:bg-black transition-all flex items-center justify-center gap-2"
+                >
+                  <ExternalLink size={18} /> Ver Pantalla Completa
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -117,6 +294,7 @@ export default function ProfileClient() {
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [loadingPedidos, setLoadingPedidos] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [paymentOrder, setPaymentOrder] = useState<any | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
   
   // Settings form states
@@ -181,6 +359,13 @@ export default function ProfileClient() {
       .from("ventas")
       .select(`
         *,
+        cupones (
+          codigo,
+          descuento_porcentaje
+        ),
+        movimientos (
+          comprobante_url
+        ),
         detalle_ventas (
           *,
           tienda (*)
@@ -349,7 +534,7 @@ export default function ProfileClient() {
                           </div>
                           <div>
                             <p className="text-[10px] font-mono font-bold text-charcoal/40 uppercase tracking-widest mb-1">Total</p>
-                            <p className="text-sm font-bold text-charcoal">${pedido.valor_total?.toLocaleString('es-CL')}</p>
+                            <p className="text-sm font-bold text-charcoal">${pedido.monto_total?.toLocaleString('es-CL')}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -364,6 +549,14 @@ export default function ProfileClient() {
                           }`}>
                             {pedido.estado_pago || 'Pendiente'}
                           </span>
+                          {pedido.estado_pedido?.toUpperCase() === 'PEDIDO CONFIRMADO' && pedido.estado_pago?.toUpperCase() === 'POR PAGAR' && (
+                            <button 
+                              onClick={() => setPaymentOrder(pedido)}
+                              className="px-4 py-2 bg-clay text-white rounded-xl text-xs font-bold hover:bg-black transition-all flex items-center gap-2 shadow-lg shadow-clay/10"
+                            >
+                              <Coins size={14} /> Ir a pagar
+                            </button>
+                          )}
                           <button 
                             onClick={() => setSelectedOrder(pedido)}
                             className="p-2 text-charcoal/40 hover:text-charcoal hover:bg-black/5 rounded-full transition-all"
@@ -565,7 +758,15 @@ export default function ProfileClient() {
           onClose={() => setSelectedOrder(null)} 
         />
       )}
+
+      {/* Payment Modal */}
+      {paymentOrder && (
+        <PaymentModal 
+          order={paymentOrder} 
+          onClose={() => setPaymentOrder(null)} 
+          onRefresh={() => fetchOrders(clientData.id)}
+        />
+      )}
     </div>
   );
 }
-

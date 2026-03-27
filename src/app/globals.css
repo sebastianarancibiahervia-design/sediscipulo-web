@@ -7,3 +7,22 @@
     @apply bg-white text-charcoal font-sans antialiased overflow-x-hidden;
   }
 }
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-charcoal/10 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-charcoal/20;
+  }
+
+  .bg-noise {
+    background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+  }
+}

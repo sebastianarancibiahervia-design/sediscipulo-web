@@ -1,20 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, Menu, User, X, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { ShoppingBag, Menu, User, X, Trash2, ChevronRight, ArrowRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/components/CartProvider";
 import Image from "next/image";
-import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isTiendaOpen, setIsTiendaOpen] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const { items, itemsCount, cartTotal, removeFromCart } = useCart();
+  const { items, itemsCount, cartTotal, removeFromCart, isCartOpen, setIsCartOpen } = useCart();
+  
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Check current session
@@ -29,6 +33,38 @@ export default function Navbar() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useGSAP(() => {
+    if (isCartOpen) {
+      // Open animation
+      gsap.to(overlayRef.current, {
+        autoAlpha: 1,
+        duration: 0.4,
+        ease: "power2.out"
+      });
+      gsap.to(drawerRef.current, {
+        x: 0,
+        duration: 0.6,
+        ease: "power4.out"
+      });
+      gsap.fromTo(".cart-item-anim", 
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.05, ease: "power2.out", delay: 0.2 }
+      );
+    } else {
+      // Close animation
+      gsap.to(overlayRef.current, {
+        autoAlpha: 0,
+        duration: 0.3,
+        ease: "power2.in"
+      });
+      gsap.to(drawerRef.current, {
+        x: "100%",
+        duration: 0.5,
+        ease: "power4.in"
+      });
+    }
+  }, { dependencies: [isCartOpen], scope: drawerRef });
 
   return (
     <>
@@ -53,7 +89,6 @@ export default function Navbar() {
               <Link href="/tienda" className={`text-sm font-medium transition-colors duration-300 ${isTiendaOpen ? 'text-black' : 'text-charcoal/80 hover:text-black'}`}>
                 Tienda
               </Link>
-              {/* Spacer bridge to close the gap between the text and the dropdown */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 h-3" />
               <div
                 className={`absolute top-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 w-48 bg-white/95 backdrop-blur-xl border border-black/10 rounded-2xl shadow-xl flex flex-col py-2 overflow-hidden transition-all duration-200 ${isTiendaOpen ? 'opacity-100 visible pointer-events-auto translate-y-0' : 'opacity-0 invisible pointer-events-none -translate-y-2'}`}
@@ -88,7 +123,7 @@ export default function Navbar() {
               <div className="relative">
                 <ShoppingBag size={18} />
                 {itemsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 w-[18px] h-[18px] bg-charcoal text-clay border border-clay rounded-full text-[10px] flex items-center justify-center font-bold">
+                  <span className="absolute -top-2 -right-2 w-[18px] h-[18px] bg-charcoal text-clay border border-clay rounded-full text-[10px] flex items-center justify-center font-bold animate-in zoom-in duration-300">
                     {itemsCount}
                   </span>
                 )}
@@ -102,7 +137,7 @@ export default function Navbar() {
             <button onClick={() => setIsCartOpen(!isCartOpen)} className="text-charcoal p-2 relative">
               <ShoppingBag size={20} />
               {itemsCount > 0 && (
-                <span className="absolute top-1 right-1 w-[16px] h-[16px] bg-charcoal text-white rounded-full text-[9px] flex items-center justify-center font-bold transition-all">
+                <span className="absolute top-1 right-1 w-[16px] h-[16px] bg-charcoal text-white rounded-full text-[9px] flex items-center justify-center font-bold">
                   {itemsCount}
                 </span>
               )}
@@ -140,83 +175,136 @@ export default function Navbar() {
       )}
     </nav>
 
-    {/* Cart Slide-over panel */}
-    {isCartOpen && (
-      <>
-        {/* Overlay */}
-        <div className="fixed inset-0 bg-charcoal/20 backdrop-blur-sm z-[60]" onClick={() => setIsCartOpen(false)} />
-        {/* Panel */}
-        <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-[70] border-l border-black/5 transform transition-transform duration-300 ease-in-out flex flex-col">
-          <div className="p-6 border-b border-black/5 flex items-center justify-between">
-            <h2 className="text-xl font-sans font-bold text-charcoal flex items-center gap-2">
-              <ShoppingBag size={20} /> Tu Carrito
-            </h2>
-            <button onClick={() => setIsCartOpen(false)} className="p-2 text-charcoal/60 hover:text-charcoal hover:bg-black/5 rounded-full transition-colors">
-              <X size={20} />
+    {/* Cart Drawer */}
+    <div className="fixed inset-0 z-[60] pointer-events-none">
+      {/* Overlay */}
+      <div 
+        ref={overlayRef}
+        className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm opacity-0 invisible pointer-events-auto" 
+        onClick={() => setIsCartOpen(false)} 
+      />
+      
+      {/* Panel */}
+      <div 
+        ref={drawerRef}
+        className="absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl border-l border-black/5 flex flex-col translate-x-full pointer-events-auto overflow-hidden rounded-l-[2.5rem]"
+      >
+        <div className="p-8 border-b border-black/5 flex items-center justify-between bg-neutral-50/50">
+          <h2 className="text-2xl font-sans font-bold text-charcoal flex items-center gap-3">
+            <ShoppingBag size={24} className="text-charcoal" /> Tu Carrito
+          </h2>
+          <div className="absolute top-8 right-8 flex items-center gap-4">
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-charcoal/50">Carrito de Compras</span>
+            <button 
+              onClick={() => setIsCartOpen(false)}
+              className="p-3 bg-black/5 hover:bg-black/10 rounded-full transition-all hover:scale-110 active:scale-90"
+            >
+              <X size={20} className="text-charcoal" />
             </button>
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col">
-            {itemsCount === 0 ? (
-              <div className="text-center my-auto">
-                <div className="w-16 h-16 bg-black/5 rounded-full flex items-center justify-center mx-auto mb-4 text-charcoal/30">
-                  <ShoppingBag size={32} />
-                </div>
-                <p className="text-lg font-medium text-charcoal mb-2">Tu carrito está vacío</p>
-                <p className="text-charcoal/60 mb-6 text-sm">Aún no has agregado productos a tu carrito de compras.</p>
-                <Link href="/tienda" onClick={() => setIsCartOpen(false)} className="inline-block px-6 py-3 bg-charcoal text-white rounded-xl text-sm font-semibold hover:bg-black transition-colors">
-                  Explorar la Tienda
-                </Link>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-8 flex flex-col custom-scrollbar">
+          {itemsCount === 0 ? (
+            <div className="text-center my-auto px-4">
+              <div className="w-20 h-20 bg-black/5 rounded-full flex items-center justify-center mx-auto mb-6 text-charcoal/20">
+                <ShoppingBag size={40} />
               </div>
-            ) : (
-              <div className="w-full flex-1 flex flex-col gap-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-4 p-4 rounded-2xl border border-black/5 bg-neutral-50 relative group">
-                    <div className="relative w-20 h-24 bg-white rounded-xl overflow-hidden border border-black/5 flex-shrink-0">
-                      <Image 
-                        src={item.image} 
-                        alt={item.name} 
-                        fill 
-                        className="object-cover" 
-                      />
+              <h3 className="text-xl font-bold text-charcoal mb-3">Tu carrito está vacío</h3>
+              <p className="text-charcoal/50 mb-8 max-w-[240px] mx-auto">Explora nuestra colección y encuentra algo especial para ti.</p>
+              <Link 
+                href="/tienda" 
+                onClick={() => setIsCartOpen(false)} 
+                className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal text-white rounded-2xl font-bold hover:bg-black transition-all hover:scale-105 active:scale-95"
+              >
+                Ir a la Tienda <ChevronRight size={18} />
+              </Link>
+            </div>
+          ) : (
+            <div className="w-full flex-1 flex flex-col gap-6">
+              {!user && (
+                <div className="cart-item-anim p-8 bg-cream border border-clay/10 rounded-[2.5rem] mb-4 shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-clay/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-150 duration-700" />
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                      <User size={20} className="text-clay" />
                     </div>
-                    <div className="flex flex-col justify-center flex-1">
-                      <h4 className="font-sans font-bold text-charcoal leading-tight pr-6">{item.name}</h4>
-                      <p className="text-xs text-charcoal/60 mt-1 mb-2 capitalize">
-                        {item.base} — {item.diseno} — Talla {item.talla}
-                      </p>
-                      <div className="flex justify-between items-center mt-auto">
-                        <span className="font-mono text-sm font-semibold text-charcoal">${item.price.toLocaleString('es-CL')} <span className="text-[10px] text-charcoal/50 font-normal">x{item.quantity}</span></span>
-                      </div>
-                    </div>
-                    
-                    <button 
-                      onClick={() => removeFromCart(item.id)}
-                      className="absolute top-4 right-4 text-charcoal/30 hover:text-red-500 transition-colors p-1"
+                    <h4 className="text-xl font-bold text-charcoal mb-2 leading-tight">¿Listo para hacer tu pedido?</h4>
+                    <p className="text-sm font-medium text-charcoal/50 mb-6 leading-relaxed">
+                      Inicia sesión para que podamos gestionar tu stock y procesar tu pedido de forma personalizada.
+                    </p>
+                    <Link 
+                      href="/auth/login" 
+                      onClick={() => setIsCartOpen(false)}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-charcoal text-white text-sm rounded-xl font-bold hover:bg-black transition-all shadow-lg shadow-black/10"
                     >
-                      <Trash2 size={16} />
-                    </button>
+                      Iniciar Sesión <ArrowRight size={16} />
+                    </Link>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {itemsCount > 0 && (
-            <div className="p-6 border-t border-black/5 bg-white">
-              <div className="flex justify-between items-center mb-6">
-                <span className="font-medium text-charcoal">Subtotal</span>
-                <span className="font-mono font-bold text-lg text-charcoal">${cartTotal.toLocaleString('es-CL')}</span>
-              </div>
-              <button className="w-full py-4 bg-charcoal text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-colors shadow-sm">
-                Proceder al Checkout
-              </button>
+                </div>
+              )}
+              {items.map((item) => (
+                <div key={item.id} className="cart-item-anim flex gap-5 p-5 rounded-[2rem] border border-black/5 bg-white relative group hover:shadow-xl hover:shadow-black/5 transition-all duration-300">
+                  <div className="relative w-24 h-28 bg-neutral-50 rounded-2xl overflow-hidden border border-black/5 flex-shrink-0 shadow-sm">
+                    <Image 
+                      src={item.image} 
+                      alt={item.name} 
+                      fill 
+                      className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
+                  </div>
+                  <div className="flex flex-col justify-center flex-1">
+                    <h4 className="font-sans font-bold text-charcoal text-lg leading-tight pr-8">{item.name}</h4>
+                    <p className="text-xs font-medium text-charcoal/60 mt-1.5 mb-3 uppercase tracking-wider">
+                      {item.base} • {item.diseno} • {item.talla}
+                    </p>
+                    <div className="flex justify-between items-center mt-auto">
+                      <span className="font-mono text-charcoal font-bold">
+                        ${item.price.toLocaleString('es-CL')} 
+                        <span className="ml-2 text-[10px] text-charcoal/60 font-normal">CANT. {item.quantity}</span>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => removeFromCart(item.id)}
+                    className="absolute top-5 right-5 text-charcoal/20 hover:text-red-500 transition-all p-1 hover:scale-110"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
-      </>
-    )}
-
+        
+        {itemsCount > 0 && (
+          <div className="p-8 border-t border-black/5 bg-[#FAF8F5] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-center mb-8 px-2">
+              <span className="text-charcoal/60 font-medium">Subtotal Estimado</span>
+              <span className="font-mono font-bold text-2xl text-charcoal">${cartTotal.toLocaleString('es-CL')}</span>
+            </div>
+            {user ? (
+              <Link 
+                href="/checkout"
+                onClick={() => setIsCartOpen(false)}
+                className="w-full py-5 bg-charcoal text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-black/10 text-lg"
+              >
+                Proceder al Checkout <ChevronRight size={20} />
+              </Link>
+            ) : (
+              <Link 
+                href="/auth/login"
+                onClick={() => setIsCartOpen(false)}
+                className="w-full py-5 bg-clay text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-clay/10 text-lg text-center"
+              >
+                Inicia sesión para pagar <ChevronRight size={20} />
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
     </>
   );
 }
