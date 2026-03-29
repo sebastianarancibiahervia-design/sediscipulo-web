@@ -123,19 +123,22 @@ export default function HeroSection({ topProduct }: { topProduct: GroupedProduct
           >
             {/* The actual image fake dashboard/mockup */}
             <div className="w-full h-full relative bg-charcoal">
-              {displayProduct.imagePrincipal ? (
-                <img
-                  src={displayProduct.imagePrincipal.startsWith('/') ? displayProduct.imagePrincipal : getProductImageUrl(displayProduct.imagePrincipal)}
-                  alt={displayProduct.name}
-                  className="object-cover absolute inset-0 w-full h-full opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
-                />
-              ) : (
-                <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-neutral-100">
-                  <p className="text-xs font-mono font-bold text-charcoal/20 uppercase tracking-widest leading-loose text-center">
-                    Imagen en<br/>construcción...
-                  </p>
-                </div>
-              )}
+              {(() => {
+                const fullImageUrl = getProductImageUrl(displayProduct.imagePrincipal);
+                return fullImageUrl && !fullImageUrl.endsWith('/') ? (
+                  <img
+                    src={fullImageUrl}
+                    alt={displayProduct.name}
+                    className="object-cover absolute inset-0 w-full h-full opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
+                  />
+                ) : (
+                  <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-neutral-100">
+                    <p className="text-xs font-mono font-bold text-charcoal/20 uppercase tracking-widest leading-loose text-center">
+                      Imagen en<br/>construcción...
+                    </p>
+                  </div>
+                );
+              })()}
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal w-full h-full mix-blend-multiply opacity-60"></div>
 
               {/* Overlay UI to make it feel more tool-like */}
