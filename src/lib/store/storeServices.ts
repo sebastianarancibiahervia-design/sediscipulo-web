@@ -105,11 +105,13 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
 
   // Group by producto_tienda
   const groupedMap = new Map<string, GroupedProduct>();
+  const topVariationSales = new Map<string, number>();
 
   for (const item of rawItems) {
     if (!item.producto_tienda) continue;
     
     const name = item.producto_tienda;
+    const itemSales = salesMap.get(item.id) || 0;
     
     if (!groupedMap.has(name)) {
       // Create new group
@@ -124,12 +126,20 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
         totalSales: 0,
         variations: [],
       });
+      if (item.imagen_principal) {
+        topVariationSales.set(name, itemSales);
+      }
     }
 
     const group = groupedMap.get(name)!;
     
-    // Add sales weight
-    const itemSales = salesMap.get(item.id) || 0;
+    // Add cumulative sales weight to the group
+    if (groupedMap.has(name) && item.id !== rawItems.find(r => r.producto_tienda === name)?.id) {
+        // Just adding safety to not double count the first item which might have already been counted before?
+        // Wait, the original code did `group.totalSales += itemSales` for ALL items, including the first one!
+        // The first item was NOT added to totalSales when the group was created (totalSales: 0).
+        // So I must add it here!
+    }
     group.totalSales += itemSales;
     
     // Add missing category if any
@@ -147,10 +157,16 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
       });
     }
     
-    // Fallback images and descriptions to the first found
-    if (!group.imagePrincipal && item.imagen_principal) {
+    // Update imagePrincipal if this variation has more sales and has an image
+    const currentTop = topVariationSales.get(name) ?? -1;
+    if (item.imagen_principal && itemSales > currentTop) {
+      topVariationSales.set(name, itemSales);
+      group.imagePrincipal = item.imagen_principal;
+    } else if (!group.imagePrincipal && item.imagen_principal) {
+      // Fallback
       group.imagePrincipal = item.imagen_principal;
     }
+
     if (!group.description && item.descripcion) {
       group.description = item.descripcion;
     }

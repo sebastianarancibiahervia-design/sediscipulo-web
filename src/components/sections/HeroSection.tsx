@@ -139,7 +139,7 @@ export default function HeroSection({ topProduct }: { topProduct: GroupedProduct
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal w-full h-full mix-blend-multiply opacity-60"></div>
 
               {/* Overlay UI to make it feel more tool-like */}
-              <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 p-5 bg-charcoal/80 backdrop-blur-xl rounded-2xl border border-white/10 z-20 shadow-2xl transition-transform duration-500 hover:-translate-y-2">
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:bottom-10 w-[calc(100%-3rem)] sm:w-80 p-5 bg-charcoal/80 backdrop-blur-xl rounded-2xl border border-white/10 z-20 shadow-2xl transition-transform duration-500 hover:-translate-y-2 flex flex-col items-center text-center">
                 <p className="font-mono text-xs text-white/50 mb-2 uppercase tracking-widest">EL MÁS VENDIDO</p>
                 <p className="font-outfit text-xl md:text-2xl font-bold text-white mb-3">{displayProduct.name}</p>
                 <Link href={`/tienda/${displayProduct.slug}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white font-medium border-b border-white/20 pb-0.5 transition-colors">

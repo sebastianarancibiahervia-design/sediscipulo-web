@@ -14,6 +14,10 @@ interface ProductCardProps {
  * En Next.js accedemos a process.env.NEXT_PUBLIC_CRM_BASE_URL en lugar de import.meta.env
  */
 export function getProductImageUrl(imagePath: string): string {
+  if (!imagePath) return "";
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
   const baseUrl = process.env.NEXT_PUBLIC_CRM_BASE_URL || "";
   // Evitar doble barra si ya la tiene
   return `${baseUrl}${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
