@@ -1,18 +1,89 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { fetchActivePromotions, Promocion, generateSlug } from "@/lib/store/storeServices";
+import { getProductImageUrl } from "@/components/store/ProductCard";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function LimitedDiscounts() {
-  const sectionRef = useRef<HTMLDivElement>(null);
+function CountdownTimer({ targetDate }: { targetDate: string }) {
+  const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
+    const calculateTime = () => {
+      const now = new Date().getTime();
+      const end = new Date(targetDate).getTime();
+      const distance = end - now;
+
+      if (distance < 0) {
+        setTimeLeft("00:00:00");
+        return true; // ended
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      const formatted = `${days > 0 ? days + 'd ' : ''}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      setTimeLeft(formatted);
+      return false;
+    };
+
+    calculateTime();
+    const interval = setInterval(() => {
+      if (calculateTime()) clearInterval(interval);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return <span>{timeLeft || "Calculando..."}</span>;
+}
+
+export default function LimitedDiscounts() {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [promotions, setPromotions] = useState<Promocion[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function init() {
+      const data = await fetchActivePromotions();
+      setPromotions(data);
+      setLoading(false);
+    }
+    init();
+  }, []);
+
+  const displayItems = useMemo(() => {
+    const items: any[] = [];
+    promotions.forEach(promo => {
+      const groupedProducts = new Map();
+      promo.detalle_promociones?.forEach(detail => {
+        const name = detail.tienda?.producto_tienda;
+        if (name && !groupedProducts.has(name)) {
+          groupedProducts.set(name, {
+            id: detail.id,
+            name: name,
+            slug: generateSlug(name),
+            image: getProductImageUrl(detail.tienda?.imagen_url || ""),
+            newPrice: detail.precio_promocional,
+            oldPrice: detail.tienda?.valor_tienda || 0,
+            fechaFin: promo.fecha_fin
+          });
+        }
+      });
+      items.push(...Array.from(groupedProducts.values()));
+    });
+    return items;
+  }, [promotions]);
+
+  useEffect(() => {
+    if (loading || displayItems.length === 0) return;
+
     const ctx = gsap.context(() => {
       gsap.from(".discount-card", {
         y: 50,
@@ -30,10 +101,7 @@ export default function LimitedDiscounts() {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
-
-  // Productos importados desde el catálogo con 10% de descuento (En migración a Supabase)
-  const placeholders: any[] = [];
+  }, [loading, displayItems.length]);
 
   return (
     <section ref={sectionRef} className="py-20 bg-[#FAF8F5] border-y border-black/5 overflow-hidden">
@@ -44,7 +112,7 @@ export default function LimitedDiscounts() {
               Descuentos por tiempo limitado
             </h2>
             <p className="text-charcoal/60 max-w-xl font-sans text-lg leading-relaxed">
-              Descubre nuestros productos con descuento. Unidades limitadas hasta agotar stock.
+              Descubre nuestros productos en promoción. Unidades limitadas hasta agotar stock o finalizar el tiempo.
             </p>
           </div>
           <Link href="/tienda" className="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-charcoal border-b-2 border-charcoal pb-1 hover:text-charcoal/60 hover:border-charcoal/60 transition-colors">
@@ -52,28 +120,39 @@ export default function LimitedDiscounts() {
           </Link>
         </div>
 
-        {/* Carousel Space */}
-        {placeholders.length > 0 ? (
+        {loading ? (
+          <div className="py-12 flex justify-center items-center opacity-50">
+            <div className="w-8 h-8 rounded-full border-2 border-charcoal border-t-transparent animate-spin"></div>
+          </div>
+        ) : displayItems.length > 0 ? (
           <div className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory slide-container">
-            {placeholders.map((item) => (
+            {displayItems.map((item) => (
               <Link href={`/tienda/${item.slug}`} key={item.id} className="discount-card relative block min-w-[280px] md:min-w-[320px] bg-white rounded-3xl p-4 shadow-sm border border-black/5 snap-start group hover:shadow-xl transition-all duration-300">
                 <div className="aspect-[4/5] relative bg-neutral-100 rounded-2xl overflow-hidden mb-4">
-                  <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full z-20 font-mono shadow-sm">
-                    -10%
+                  <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full z-20 font-mono shadow-sm flex items-center gap-1.5 backdrop-blur-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                    <CountdownTimer targetDate={item.fechaFin} />
                   </div>
                   {/* Product image area */}
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700 z-10"
-                  />
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="object-cover absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700 z-10"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center p-6 text-center z-10 relative">
+                       <p className="text-xs font-mono font-bold text-charcoal/20 uppercase tracking-widest leading-loose">
+                         Sin<br/>Imagen
+                       </p>
+                    </div>
+                  )}
                 </div>
                 <div className="px-2">
                   <h3 className="font-outfit font-semibold text-lg text-charcoal mb-2">{item.name}</h3>
                   <div className="flex items-center gap-3">
-                    <span className="text-red-500 font-bold">{item.newPrice}</span>
-                    <span className="text-charcoal/40 text-sm line-through decoration-1">{item.oldPrice}</span>
+                    <span className="text-red-500 font-bold font-mono">${item.newPrice.toLocaleString('es-CL')}</span>
+                    <span className="text-charcoal/40 text-sm font-mono line-through decoration-1 text-red-500/50">${item.oldPrice.toLocaleString('es-CL')}</span>
                   </div>
                 </div>
               </Link>

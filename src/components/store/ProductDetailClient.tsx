@@ -3,12 +3,21 @@
 import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { GroupedProduct } from "@/lib/store/storeServices";
+import { GroupedProduct, fetchActivePromotions, Promocion } from "@/lib/store/storeServices";
 import { getProductImageUrl } from "./ProductCard";
 import { useCart } from "../CartProvider";
 
 export default function ProductDetailClient({ product }: { product: GroupedProduct }) {
   const { addToCart } = useCart();
+  const [activePromos, setActivePromos] = useState<Promocion[]>([]);
+
+  useEffect(() => {
+    async function loadPromos() {
+      const data = await fetchActivePromotions();
+      setActivePromos(data);
+    }
+    loadPromos();
+  }, []);
   
   // Extract unique variation combinations
   const uniqueGarmentColors = Array.from(new Set(product.variations.map(v => v.inventario_base?.color).filter(Boolean))) as string[];
@@ -73,6 +82,19 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
     );
   };
 
+  const activePromoMatch = useMemo(() => {
+    if (!matchedVariation) return null;
+    let match = null;
+    for (const promo of activePromos) {
+      if (!match) {
+        match = promo.detalle_promociones?.find(d => d.id_tienda === matchedVariation.id);
+      }
+    }
+    return match || null;
+  }, [matchedVariation, activePromos]);
+
+  const currentPrice = activePromoMatch ? activePromoMatch.precio_promocional : product.price;
+
   return (
     <div className="bg-white">
       <Link href="/tienda" className="inline-flex items-center gap-2 text-charcoal/60 hover:text-charcoal transition-colors mb-8 text-sm font-medium">
@@ -120,7 +142,15 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
         {/* Product Info */}
         <div className="flex flex-col">
           <h1 className="text-4xl lg:text-5xl font-sans font-bold text-charcoal mb-4 tracking-tight">{product.name}</h1>
-          <p className="text-2xl font-mono text-charcoal/80 mb-6">${product.price.toLocaleString('es-CL')}</p>
+          <div className="mb-6 flex items-center gap-4">
+            <p className="text-2xl font-mono text-charcoal/80">${currentPrice.toLocaleString('es-CL')}</p>
+            {activePromoMatch && (
+              <p className="text-lg font-mono text-red-500/60 line-through decoration-1">${product.price.toLocaleString('es-CL')}</p>
+            )}
+            {activePromoMatch && (
+              <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-md font-mono animate-pulse">OFERTA</span>
+            )}
+          </div>
           
           <div className="prose prose-sm text-charcoal/60 mb-8 max-w-none">
             <p>{product.description}</p>
@@ -214,7 +244,7 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
                   addToCart({
                     id: String(matchedVariation.id),
                     name: product.name,
-                    price: product.price,
+                    price: currentPrice,
                     image: activeImage || getProductImageUrl(product.imagePrincipal),
                     base: matchedVariation.inventario_base?.color || "",
                     diseno: matchedVariation.disenos?.color || "",

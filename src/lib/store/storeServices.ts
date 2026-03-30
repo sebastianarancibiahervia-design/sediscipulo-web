@@ -43,6 +43,73 @@ export interface GroupedProduct {
   variations: TiendaItem[];
 }
 
+export interface DetallePromocion {
+  id: string;
+  id_promocion: string;
+  id_tienda: string;
+  precio_promocional: number;
+  unidades_limitadas: number | null;
+  unidades_vendidas: number;
+  tienda?: TiendaItem;
+}
+
+export interface Promocion {
+  id: string;
+  nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  activa: boolean;
+  detalle_promociones?: DetallePromocion[];
+}
+
+export async function fetchActivePromotions(): Promise<Promocion[]> {
+  const today = new Date().toISOString();
+  
+  const { data, error } = await supabase
+    .from('promociones')
+    .select(`
+      id,
+      nombre,
+      fecha_inicio,
+      fecha_fin,
+      activa,
+      detalle_promociones (
+        id,
+        id_promocion,
+        id_tienda,
+        precio_promocional,
+        unidades_limitadas,
+        unidades_vendidas,
+        tienda (
+          id,
+          producto_tienda,
+          valor_tienda,
+          imagen_url
+        )
+      )
+    `)
+    .eq('activa', true)
+    .lte('fecha_inicio', today)
+    .gte('fecha_fin', today);
+    
+  if (error) {
+    console.error("Error fetching active promotions:", error);
+    return [];
+  }
+  
+  // Filter out exhausted promotional stock on the client processing side
+  const validData = (data as any[]).map(promo => {
+    if (promo.detalle_promociones) {
+      promo.detalle_promociones = promo.detalle_promociones.filter((detail: any) => 
+        detail.unidades_limitadas === null || detail.unidades_vendidas < detail.unidades_limitadas
+      );
+    }
+    return promo;
+  });
+  
+  return validData as Promocion[];
+}
+
 // Utility to create URL-friendly slugs
 export function generateSlug(text: string): string {
   return text
@@ -348,6 +415,30 @@ export async function createOrder(
   if (detailError) {
     console.error("Error creating detalle_ventas records:", detailError);
     throw new Error(`Error en el detalle de venta: ${detailError.message}`);
+  }
+
+  // 4. Update promotional stock if applicable
+  try {
+    const activePromos = await fetchActivePromotions();
+    for (const item of items) {
+      for (const promo of activePromos) {
+        const match = promo.detalle_promociones?.find(d => d.id_tienda === item.id_tienda);
+        if (match) {
+          // Increment unidades_vendidas
+          const newSoldCounter = match.unidades_vendidas + item.cantidad;
+          const { error: promoUpdateErr } = await supabase
+            .from('detalle_promociones')
+            .update({ unidades_vendidas: newSoldCounter })
+            .eq('id', match.id);
+          
+          if (promoUpdateErr) {
+            console.error(`Error updating promotion stock for ${item.id_tienda}:`, promoUpdateErr);
+          }
+        }
+      }
+    }
+  } catch (promoErr) {
+    console.error("Error processing promotional stock adjustments:", promoErr);
   }
 
   return { ...venta, email: clientEmail };
