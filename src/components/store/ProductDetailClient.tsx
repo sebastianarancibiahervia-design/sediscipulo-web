@@ -3,12 +3,14 @@
 import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { GroupedProduct, fetchActivePromotions, Promocion } from "@/lib/store/storeServices";
 import { getProductImageUrl } from "./ProductCard";
 import { useCart } from "../CartProvider";
 
 export default function ProductDetailClient({ product }: { product: GroupedProduct }) {
   const { addToCart } = useCart();
+  const searchParams = useSearchParams();
   const [activePromos, setActivePromos] = useState<Promocion[]>([]);
 
   useEffect(() => {
@@ -23,10 +25,14 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
   const uniqueGarmentColors = Array.from(new Set(product.variations.map(v => v.inventario_base?.color).filter(Boolean))) as string[];
   const uniqueSizes = Array.from(new Set(product.variations.map(v => v.inventario_base?.talla).filter(Boolean))) as string[];
   
-  // Define default states to the first available options
-  const [selectedColor, setSelectedColor] = useState<string>(uniqueGarmentColors[0] || "");
-  const [selectedSize, setSelectedSize] = useState<string>(uniqueSizes[0] || "");
-  const [selectedDesignColor, setSelectedDesignColor] = useState<string>("");
+  const queryColor = searchParams.get("colorPrenda");
+  const querySize = searchParams.get("talla");
+  const queryDesign = searchParams.get("colorDiseno");
+
+  // Define default states favoring url query params or fallback to the first available options
+  const [selectedColor, setSelectedColor] = useState<string>(queryColor || uniqueGarmentColors[0] || "");
+  const [selectedSize, setSelectedSize] = useState<string>(querySize || uniqueSizes[0] || "");
+  const [selectedDesignColor, setSelectedDesignColor] = useState<string>(queryDesign || "");
 
   // Design colors should be based on selected garment color
   const uniqueDesignColors = useMemo(() => {

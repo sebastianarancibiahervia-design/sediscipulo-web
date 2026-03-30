@@ -84,7 +84,9 @@ export async function fetchActivePromotions(): Promise<Promocion[]> {
           id,
           producto_tienda,
           valor_tienda,
-          imagen_url
+          imagen_url,
+          inventario_base (id, talla, color),
+          disenos (id, color)
         )
       )
     `)
