@@ -26,6 +26,8 @@ const ibmPlex = IBM_Plex_Mono({
   variable: "--font-ibm-plex",
 });
 
+import WhatsAppFloat from "@/components/WhatsAppFloat";
+
 export const metadata: Metadata = {
   title: "SeDiscipulo | Tienda de ropa cristiana",
   description: "Diseños alineados a la verdad bíblica con calidad premium",
@@ -47,6 +49,7 @@ export default function RootLayout({
         <ConditionalLayout>
           {children}
         </ConditionalLayout>
+        <WhatsAppFloat />
       </body>
     </html>
   );
