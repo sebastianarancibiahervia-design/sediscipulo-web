@@ -96,7 +96,8 @@ export default function LimitedDiscounts() {
             newPrice: detail.precio_promocional,
             oldPrice: detail.tienda?.valor_tienda || 0,
             fechaFin: promo.fecha_fin,
-            variationDesc: `${color} (${talla}) - ${diseno}`
+            variationDesc: `${color} (${talla}) - ${diseno}`,
+            disponibles: detail.unidades_limitadas !== null ? Math.max(0, detail.unidades_limitadas - detail.unidades_vendidas) : null
           });
         }
       });
@@ -198,6 +199,12 @@ export default function LimitedDiscounts() {
                       <span className="text-red-500 font-bold font-mono">${item.newPrice.toLocaleString('es-CL')}</span>
                       <span className="text-charcoal/40 text-sm font-mono line-through decoration-1 text-red-500/50">${item.oldPrice.toLocaleString('es-CL')}</span>
                     </div>
+                    {item.disponibles !== null && (
+                      <p className="text-[11px] font-bold text-clay/90 mt-3 font-sans flex items-center gap-1.5 uppercase tracking-wide">
+                        <span className="w-1.5 h-1.5 rounded-full bg-clay/70"></span>
+                        Quedan {item.disponibles} {item.disponibles === 1 ? 'unidad disponible' : 'unidades disponibles'}
+                      </p>
+                    )}
                   </div>
                 </Link>
               ))}
