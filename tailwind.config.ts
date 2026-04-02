@@ -13,6 +13,7 @@ const config: Config = {
         clay: "#CC5833",
         cream: "#F2F0E9",
         charcoal: "#1A1A1A",
+        skin: "#E8DCC8",
       },
       fontFamily: {
         sans: ["var(--font-plus-jakarta)", "sans-serif"],

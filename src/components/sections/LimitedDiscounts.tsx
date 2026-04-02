@@ -125,42 +125,44 @@ export default function LimitedDiscounts() {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, [loading, displayItems.length]);
-
-  return (
-    <section ref={sectionRef} className="py-20 bg-[#FAF8F5] border-y border-black/5 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
-          <div>
-            <h2 className="text-3xl md:text-5xl font-sans font-bold text-charcoal tracking-tight mb-4">
-              Descuentos por tiempo limitado
+  }, [loading, displayItems.length]);  return (
+    <section ref={sectionRef} className="py-24 bg-white overflow-hidden">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-600 font-medium text-xs font-mono uppercase tracking-widest rounded-full mb-4 border border-red-100">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
+              Ofertas Flash
+            </div>
+            <h2 className="text-4xl md:text-5xl font-sans font-bold text-charcoal tracking-tight mb-4">
+              Descuentos especiales
             </h2>
-            <p className="text-charcoal/60 max-w-xl font-sans text-lg leading-relaxed">
-              Descubre nuestros productos en promoción. Unidades limitadas hasta agotar stock o finalizar el tiempo.
+            <p className="text-charcoal/60 font-sans text-lg leading-relaxed">
+              Unidades estrictamente limitadas. Estos diseños no volverán a este precio.
             </p>
           </div>
-          <Link href="/tienda" className="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-charcoal border-b-2 border-charcoal pb-1 hover:text-charcoal/60 hover:border-charcoal/60 transition-colors">
-            Ver todo
+          <Link href="/tienda" className="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-charcoal bg-neutral-100 hover:bg-neutral-200 px-6 py-3 rounded-full transition-colors">
+            Ver colección completa <ChevronRight size={16} />
           </Link>
         </div>
 
         {loading ? (
-          <div className="py-12 flex justify-center items-center opacity-50">
-            <div className="w-8 h-8 rounded-full border-2 border-charcoal border-t-transparent animate-spin"></div>
+          <div className="py-20 flex justify-center items-center">
+            <div className="w-10 h-10 rounded-full border-2 border-charcoal/20 border-t-charcoal animate-spin"></div>
           </div>
         ) : displayItems.length > 0 ? (
-          <div className="relative group">
-            {displayItems.length > 4 && (
+          <div className="relative group/carousel -mx-4 sm:mx-0">
+            {displayItems.length > 3 && (
               <>
                 <button 
                   onClick={() => scroll("left")}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 z-30 bg-white shadow-lg border border-black/5 text-charcoal p-3 rounded-full hover:scale-110 transition-transform opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
+                  className="absolute left-4 md:-left-6 top-1/2 -translate-y-1/2 z-30 bg-white/90 backdrop-blur border border-black/5 text-charcoal p-4 rounded-full shadow-xl hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 focus:outline-none"
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button 
                   onClick={() => scroll("right")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 z-30 bg-white shadow-lg border border-black/5 text-charcoal p-3 rounded-full hover:scale-110 transition-transform opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
+                  className="absolute right-4 md:-right-6 top-1/2 -translate-y-1/2 z-30 bg-white/90 backdrop-blur border border-black/5 text-charcoal p-4 rounded-full shadow-xl hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 focus:outline-none"
                 >
                   <ChevronRight size={24} />
                 </button>
@@ -168,51 +170,70 @@ export default function LimitedDiscounts() {
             )}
             <div 
               ref={scrollContainerRef}
-              className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide"
+              className="flex gap-4 md:gap-6 overflow-x-auto pb-12 px-4 sm:px-0 snap-x snap-mandatory scrollbar-hide"
             >
               {displayItems.map((item) => (
-                <Link href={`/tienda/${item.slug}`} key={item.id} className="discount-card relative flex-none w-[280px] md:w-[320px] bg-white rounded-3xl p-4 shadow-sm border border-black/5 snap-start shrink-0 group hover:shadow-xl transition-all duration-300">
-                  <div className="aspect-[4/5] relative bg-neutral-100 rounded-2xl overflow-hidden mb-4">
-                    <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full z-20 font-mono shadow-sm flex items-center gap-1.5 backdrop-blur-md">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                      <CountdownTimer targetDate={item.fechaFin} />
+                <Link 
+                  href={`/tienda/${item.slug}`} 
+                  key={item.id} 
+                  className="discount-card relative flex-none w-[300px] md:w-[400px] aspect-[4/5] bg-charcoal rounded-[2rem] overflow-hidden snap-start shrink-0 group hover:shadow-2xl hover:shadow-charcoal/20 transition-all duration-500"
+                >
+                  {/* Imagen de fondo */}
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 z-0"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 z-0">
+                       <p className="text-white/20 font-mono text-sm tracking-[0.2em]">SIN IMAGEN</p>
                     </div>
-                    {/* Product image area */}
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="object-cover absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700 z-10"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center p-6 text-center z-10 relative">
-                         <p className="text-xs font-mono font-bold text-charcoal/20 uppercase tracking-widest leading-loose">
-                           Sin<br/>Imagen
-                         </p>
-                      </div>
-                    )}
+                  )}
+
+                  {/* Degradado para que se lea el texto */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 z-10" />
+
+                  {/* Badge de tiempo en top-left */}
+                  <div className="absolute top-5 left-5 z-20">
+                    <div className="bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-mono font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                       <CountdownTimer targetDate={item.fechaFin} />
+                    </div>
                   </div>
-                  <div className="px-2">
-                    <h3 className="font-outfit font-semibold text-lg text-charcoal leading-tight mb-1">{item.name}</h3>
-                    <p className="text-xs font-medium text-charcoal/50 mb-3">{item.variationDesc}</p>
-                    <div className="flex items-center gap-3">
-                      <span className="text-red-500 font-bold font-mono">${item.newPrice.toLocaleString('es-CL')}</span>
-                      <span className="text-charcoal/40 text-sm font-mono line-through decoration-1 text-red-500/50">${item.oldPrice.toLocaleString('es-CL')}</span>
-                    </div>
-                    {item.disponibles !== null && (
-                      <p className="text-[11px] font-bold text-clay/90 mt-3 font-sans flex items-center gap-1.5 uppercase tracking-wide">
-                        <span className="w-1.5 h-1.5 rounded-full bg-clay/70"></span>
-                        Quedan {item.disponibles} {item.disponibles === 1 ? 'unidad disponible' : 'unidades disponibles'}
+
+                  {/* Contenido inferior */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-20">
+                    <div className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                      <p className="text-white/70 font-mono text-[10px] md:text-xs uppercase tracking-widest mb-2 line-clamp-1">
+                        {item.variationDesc}
                       </p>
-                    )}
+                      <h3 className="font-outfit font-bold text-2xl md:text-3xl text-white leading-tight mb-4 line-clamp-2">
+                        {item.name}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between mt-auto">
+                        <div className="flex items-baseline gap-3">
+                          <span className="text-white font-mono font-bold text-xl md:text-2xl">${item.newPrice.toLocaleString('es-CL')}</span>
+                          <span className="text-white/40 text-sm font-mono line-through decoration-1">${item.oldPrice.toLocaleString('es-CL')}</span>
+                        </div>
+                        {item.disponibles !== null && (
+                          <div className="bg-red-500/20 backdrop-blur-md border border-red-500/30 px-3 py-1.5 rounded-xl">
+                            <p className="text-[10px] md:text-xs font-bold text-red-100 font-sans tracking-wide">
+                              {item.disponibles} EN STOCK
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
         ) : (
-          <div className="py-12 bg-white rounded-3xl border border-black/5 text-center text-charcoal/60 font-medium">
-            Próximamente nuevos descuentos...
+          <div className="py-24 bg-neutral-50 rounded-[2rem] border border-neutral-100 text-center flex flex-col items-center justify-center">
+             <div className="w-16 h-16 bg-neutral-200/50 rounded-2xl mb-4"></div>
+             <p className="text-charcoal/50 font-medium text-lg">Pronto nuevas colecciones flash.</p>
           </div>
         )}
       </div>

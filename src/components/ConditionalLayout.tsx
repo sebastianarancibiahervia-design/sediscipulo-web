@@ -12,6 +12,8 @@ export default function ConditionalLayout({
 }) {
   const pathname = usePathname();
   const isLanding = pathname === "/";
+  // home-preview tiene hero full-screen que maneja su propio espaciado interno
+  const isFullScreenHero = pathname === "/home-preview";
 
   if (isLanding) {
     return <>{children}</>;
@@ -20,10 +22,11 @@ export default function ConditionalLayout({
   return (
     <CartProvider>
       <Navbar />
-      <main className="min-h-screen pt-20 font-sans">
+      <main className={`min-h-screen font-sans ${isFullScreenHero ? "" : "pt-20"}`}>
         {children}
       </main>
       <Footer />
     </CartProvider>
   );
 }
+

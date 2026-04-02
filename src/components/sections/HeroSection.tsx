@@ -1,158 +1,277 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowRight, Play, ShoppingCart } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, ShoppingCart } from "lucide-react";
 import Link from "next/link";
-import { useCart } from "@/components/CartProvider";
-
 import { GroupedProduct } from "@/lib/store/storeServices";
 import { getProductImageUrl } from "@/components/store/ProductCard";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function HeroSection({ topProduct }: { topProduct: GroupedProduct | null }) {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const mockupRef = useRef<HTMLDivElement>(null);
+const RANK_LABELS = [
+  { rank: "#1", desc: "Más Vendido" },
+  { rank: "#2", desc: "Más Popular" },
+  { rank: "#3", desc: "Favorito del Mes" },
+];
 
-  const displayProduct = topProduct || {
-    name: "Maranata back oversized",
-    slug: "maranata-back-oversized",
-    imagePrincipal: "/maranata-back.jpg"
-  };
+const FALLBACK: GroupedProduct = {
+  name: "Maranata Back Oversized",
+  slug: "maranata-back-oversized",
+  price: 0,
+  categories: [],
+  subcategories: [],
+  description: "",
+  imagePrincipal: "/maranata-back.jpg",
+  totalSales: 0,
+  variations: [],
+};
 
+export default function HeroSection({
+  topProducts,
+}: {
+  topProducts: GroupedProduct[];
+}) {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [showAlt, setShowAlt] = useState(false); // false = "SeDiscipulo", true = "verdad bíblica"
+  const [textFading, setTextFading] = useState(false);
+
+  const displayProducts =
+    topProducts.length > 0 ? topProducts.slice(0, 3) : [FALLBACK];
+  const numProducts = displayProducts.length;
+
+  // ── Texto alternante cada ~1 segundo ──────────────────────────────────────
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Fade up elements
-      gsap.from(".hero-element", {
-        y: 40,
-        opacity: 0,
-        duration: 1.2,
-        stagger: 0.15,
-        ease: "power3.out",
-      });
+    const interval = setInterval(() => {
+      setTextFading(true);
+      setTimeout(() => {
+        setShowAlt((prev) => !prev);
+        setTextFading(false);
+      }, 250);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
-      // Mockup 3D scroll effect
-      gsap.fromTo(
-        mockupRef.current,
-        {
-          rotateX: 15,
-          scale: 0.9,
-          y: 50,
-          opacity: 0,
-        },
-        {
-          rotateX: 0,
-          scale: 1,
-          y: 0,
-          opacity: 1,
-          duration: 1.5,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: heroRef.current,
-            start: "top top",
-            end: "bottom center",
-            scrub: 1,
-          },
-        }
-      );
-    }, heroRef);
+  // ── ScrollTrigger: cambia producto según progreso del scroll ───────────────
+  useEffect(() => {
+    if (!sectionRef.current || numProducts <= 1) return;
 
-    return () => ctx.revert();
+    const st = ScrollTrigger.create({
+      trigger: sectionRef.current,
+      start: "top top",
+      end: "bottom bottom",
+      onUpdate: (self) => {
+        const idx = Math.min(
+          Math.floor(self.progress * numProducts),
+          numProducts - 1
+        );
+        setActiveIndex(idx);
+      },
+    });
+
+    return () => st.kill();
+  }, [numProducts]);
+
+  // ── Animación de entrada ───────────────────────────────────────────────────
+  useEffect(() => {
+    gsap.fromTo(
+      ".hero-element",
+      { y: 40, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1.2, stagger: 0.15, ease: "power3.out" }
+    );
   }, []);
 
   return (
-    <section ref={heroRef} className="relative pt-32 pb-20 bg-charcoal overflow-hidden perspective-[1200px]">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/cover-webpage.jpg"
-          alt="SeDiscipulo Cover"
-          fill
-          className="object-cover opacity-60 mix-blend-overlay blur-[0px] scale-105"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/30 via-transparent to-charcoal line-noise"></div>
-      </div>
+    // Outer wrapper: N×100vh para que el sticky tenga recorrido de scroll
+    <div
+      ref={sectionRef}
+      style={{ height: `${numProducts * 100}vh` }}
+      className="relative bg-charcoal"
+    >
+      {/* ── Contenedor sticky pinned ─────────────────────────────────────── */}
+      <div className="sticky top-0 h-screen overflow-hidden bg-charcoal">
 
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px] pointer-events-none z-0" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center max-w-4xl mx-auto">
-
-
-          <h1 className="hero-element text-5xl md:text-7xl font-sans font-bold text-white leading-tight mb-6 tracking-tight">
-            Eleva tu estilo con{" "}
-            <span className="font-serif italic text-white/90 font-medium tracking-wide">
-              verdad bíblica
-            </span>
-          </h1>
-
-          <p className="hero-element text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
-            Diseños alineados a la verdad bíblica, mezclados con materiales de calidad. No es solo vestimenta; es un testimonio vivo que acompaña tu caminar.
-          </p>
-
-          <div className="hero-element flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/tienda"
-              className="group flex items-center justify-center gap-2 px-8 py-4 bg-white text-charcoal rounded-xl text-base font-semibold transition-all hover:bg-neutral-100 hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] w-full sm:w-auto"
-            >
-              <ShoppingCart size={18} />
-              Comprar
-            </Link>
-            <Link
-              href="/nosotros"
-              className="group flex items-center justify-center gap-3 px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl text-base font-medium backdrop-blur-sm transition-all hover:bg-white/20 hover:border-white/30 w-full sm:w-auto"
-            >
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-white group-hover:bg-white transition-colors">
-                <ArrowRight size={12} className="group-hover:text-charcoal transition-colors" />
-              </span>
-              Conócenos
-            </Link>
-          </div>
+        {/* Fondos: imagen de cada producto, se intercambian con fade */}
+        <div className="absolute inset-0 z-0">
+          {displayProducts.map((product, i) => {
+            const url = getProductImageUrl(product.imagePrincipal);
+            return (
+              <div
+                key={i}
+                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                  i === activeIndex ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {url && !url.endsWith("/") && (
+                  <img
+                    src={url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+            );
+          })}
+          {/* Gradientes sobre la imagen */}
+          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/80 via-charcoal/30 to-charcoal/85" />
+          <div className="absolute inset-0 bg-gradient-to-r from-charcoal/70 via-charcoal/20 to-transparent" />
         </div>
 
-        {/* 3D Mockup Container */}
-        <div className="mt-20 relative max-w-sm md:max-w-md mx-auto" style={{ perspective: "1200px" }}>
-          <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/0 rounded-3xl blur opacity-30"></div>
-          <div
-            ref={mockupRef}
-            className="w-full aspect-[4/5] bg-charcoal/50 rounded-2xl md:rounded-[3rem] shadow-2xl ring-1 ring-white/10 backdrop-blur-md flex items-center justify-center relative transform-gpu group"
-          >
-            {/* The actual image fake dashboard/mockup */}
-            <div className="w-full h-full relative bg-charcoal overflow-hidden rounded-2xl md:rounded-[3rem]">
-              {(() => {
-                const fullImageUrl = getProductImageUrl(displayProduct.imagePrincipal);
-                return fullImageUrl && !fullImageUrl.endsWith('/') ? (
-                  <img
-                    src={fullImageUrl}
-                    alt={displayProduct.name}
-                    className="object-cover absolute inset-0 w-full h-full opacity-80 group-hover:opacity-100 transition-opacity duration-700 ease-out"
-                  />
-                ) : (
-                  <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-neutral-100">
-                    <p className="text-xs font-mono font-bold text-charcoal/20 uppercase tracking-widest leading-loose text-center">
-                      Imagen en<br/>construcción...
-                    </p>
-                  </div>
-                );
-              })()}
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal w-full h-full mix-blend-multiply opacity-60"></div>
+        {/* Glow ambiental */}
+        <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] pointer-events-none z-0" />
 
-              {/* Overlay UI to make it feel more tool-like */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:bottom-10 w-[calc(100%-3rem)] sm:w-80 p-5 bg-charcoal/80 backdrop-blur-xl rounded-2xl border border-white/10 z-20 shadow-2xl transition-all duration-500 hover:bg-charcoal/90 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex flex-col items-center text-center">
-                <p className="font-mono text-xs text-white/50 mb-2 uppercase tracking-widest">EL MÁS VENDIDO</p>
-                <p className="font-outfit text-xl md:text-2xl font-bold text-white mb-3">{displayProduct.name}</p>
-                <Link href={`/tienda/${displayProduct.slug}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white font-medium border-b border-white/20 pb-0.5 transition-colors">
-                  Ver Producto <ArrowRight size={14} />
-                </Link>
-              </div>
+        {/* ── Contenido principal ────────────────────────────────────────── */}
+        <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center pt-20 gap-10 md:gap-14">
+
+          {/* Columna izquierda: texto */}
+          <div className="max-w-2xl">
+            <h1 className="hero-element text-5xl md:text-7xl font-sans font-bold text-white leading-tight mb-6 tracking-tight">
+              Vístete con{" "}
+              <span
+                className={`inline-block transition-all duration-[250ms] ease-in-out font-serif italic text-white/90 font-medium tracking-wide ${
+                  textFading
+                    ? "opacity-0 translate-y-1"
+                    : "opacity-100 translate-y-0"
+                }`}
+              >
+                {showAlt ? "verdad bíblica" : "SeDiscipulo"}
+              </span>
+            </h1>
+
+            <p className="hero-element text-base md:text-lg text-white/60 mb-8 max-w-xl leading-relaxed font-light">
+              No es solo vestimenta — es un testimonio vivo que acompaña tu
+              caminar con materiales de calidad y diseños con propósito.
+            </p>
+
+            <div className="hero-element flex flex-wrap gap-3">
+              <Link
+                href="/tienda"
+                className="group flex items-center gap-2 px-6 py-3.5 bg-white text-charcoal rounded-xl text-sm font-semibold transition-all hover:bg-neutral-100 hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+              >
+                <ShoppingCart size={16} />
+                Ir a la Tienda
+              </Link>
+              <Link
+                href="/nosotros"
+                className="group flex items-center gap-3 px-6 py-3.5 bg-white/10 text-white border border-skin/30 rounded-xl text-sm font-medium backdrop-blur-sm transition-all hover:bg-white/20 hover:border-skin/60"
+              >
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-skin/20 text-skin group-hover:bg-skin transition-colors">
+                  <ArrowRight size={10} className="group-hover:text-charcoal transition-colors" />
+                </span>
+                Conócenos
+              </Link>
             </div>
           </div>
+
+          {/* Indicadores de productos (visibles si hay más de 1) */}
+          {numProducts > 1 && (
+            <div className="flex flex-wrap items-center gap-3 md:gap-4 mt-6">
+              {displayProducts.map((product, i) => {
+                const isActive = i === activeIndex;
+                return (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl backdrop-blur-md border transition-all duration-500 cursor-pointer ${
+                      isActive 
+                        ? "bg-white/10 border-white/20 shadow-lg" 
+                        : "bg-black/20 border-white/5 opacity-60 hover:opacity-100 hover:bg-black/40"
+                    }`}
+                    onClick={() => setActiveIndex(i)}
+                  >
+                    {/* Círculo del número */}
+                    <div
+                      className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-mono text-[11px] font-bold transition-all duration-500 ${
+                        isActive
+                          ? "bg-white text-charcoal shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                          : "bg-white/20 text-white"
+                      }`}
+                    >
+                      {i + 1}
+                    </div>
+                    {/* Textos */}
+                    <div className={isActive ? "block" : "hidden sm:block"}>
+                      <p className={`font-mono text-[9px] uppercase tracking-widest transition-colors ${isActive ? 'text-white/90' : 'text-white/60'}`}>
+                        {RANK_LABELS[i]?.rank} {RANK_LABELS[i]?.desc}
+                      </p>
+                      <p className={`font-sans text-sm font-semibold truncate max-w-[140px] transition-colors ${isActive ? 'text-white' : 'text-white/80'}`}>
+                        {product.name.split(' - ')[0]}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+
+        {/* ── Tarjeta del producto activo (bottom-right) ─────────────────── */}
+        <div className="absolute bottom-14 right-6 md:right-14 z-20 w-[180px] md:w-[240px] aspect-[3/4]">
+          {displayProducts.map((product, i) => {
+            const url = getProductImageUrl(product.imagePrincipal);
+            const isActive = i === activeIndex;
+            return (
+              <div
+                key={i}
+                className={`absolute inset-0 transition-all duration-700 ease-in-out rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 bg-charcoal ${
+                  isActive
+                    ? "opacity-100 translate-y-0 pointer-events-auto"
+                    : i < activeIndex
+                    ? "opacity-0 translate-y-6 pointer-events-none"
+                    : "opacity-0 -translate-y-6 pointer-events-none"
+                }`}
+              >
+                {url && !url.endsWith("/") ? (
+                  <img
+                    src={url}
+                    alt={product.name}
+                    className="w-full h-full object-cover opacity-90"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-neutral-900">
+                    <p className="text-xs font-mono text-white/20 uppercase text-center">
+                      Sin imagen
+                    </p>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/95 via-charcoal/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <p className="font-outfit text-sm font-bold text-white mb-2 line-clamp-2">
+                    {product.name}
+                  </p>
+                  <Link
+                    href={`/tienda/${product.slug}`}
+                    className="inline-flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors border-b border-white/20 pb-0.5"
+                  >
+                    Ver Producto <ArrowRight size={10} />
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Barra de progreso (bottom) ─────────────────────────────────── */}
+        {numProducts > 1 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/5">
+            <div
+              className="h-full bg-skin transition-all duration-500 ease-out"
+              style={{ width: `${((activeIndex + 1) / numProducts) * 100}%` }}
+            />
+          </div>
+        )}
+
+        {/* ── Hint de scroll (solo si no estás en el último producto) ────── */}
+        {numProducts > 1 && activeIndex < numProducts - 1 && (
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 pointer-events-none">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">
+              scroll
+            </span>
+            <div className="w-px h-4 bg-gradient-to-b from-white/30 to-transparent" />
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   );
 }

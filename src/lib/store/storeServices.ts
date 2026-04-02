@@ -252,6 +252,96 @@ export async function fetchProductGroupBySlug(slug: string): Promise<GroupedProd
   return product || null;
 }
 
+/**
+ * Retorna los N productos más vendidos históricamente
+ * de la categoría SEDISCIPULO, consultando directamente
+ * detalle_ventas → tienda (categoria = 'SEDISCIPULO').
+ *
+ * Lógica:
+ * 1. Obtiene todos los id de tienda con categoria='SEDISCIPULO' (activos)
+ * 2. Busca en detalle_ventas TODOS los registros con esos id_tienda (histórico, sin filtro de fecha)
+ * 3. Cuenta ventas por id_tienda, agrupa por nombre de producto, suma
+ * 4. Retorna los top N ordenados por ventas totales históricas
+ */
+export async function fetchTopHistoricalSellers(limit = 3): Promise<GroupedProduct[]> {
+  // ── Paso 1: Traer IDs de tienda SEDISCIPULO (tanto activos como inactivos) ──
+  // Necesitamos relacionar id_tienda con nombre incluso para variaciones descontinuadas
+  const { data: tiendaItems, error: tiendaError } = await supabase
+    .from('tienda')
+    .select('id, producto_tienda, activo')
+    .eq('categoria', 'SEDISCIPULO');
+
+  if (tiendaError || !tiendaItems?.length) {
+    console.error('fetchTopHistoricalSellers: no SEDISCIPULO products found', tiendaError);
+    return [];
+  }
+
+  // Mapa de id_tienda -> nombre del producto
+  const idToName = new Map<string, string>();
+  // Nombres de producto que tienen al menos una variación activa
+  const namesWithActiveVar = new Set<string>();
+
+  tiendaItems.forEach((t: any) => {
+    idToName.set(t.id, t.producto_tienda);
+    if (t.activo) {
+      namesWithActiveVar.add(t.producto_tienda);
+    }
+  });
+
+  // ── Paso 2: Traer histórico completo de detalle_ventas (con cantidad) ──
+  const { data: salesRows, error: salesError } = await supabase
+    .from('detalle_ventas')
+    .select('id_tienda, cantidad');
+
+  if (salesError) {
+    console.error('fetchTopHistoricalSellers: error fetching detalle_ventas', salesError.message || salesError.details || salesError.hint || JSON.stringify(salesError));
+    const allProducts = await fetchActiveStoreProducts();
+    return allProducts.slice(0, limit);
+  }
+
+  // ── Paso 3: Agrupar por nombre de producto y SUMAR cantidad ──────────────
+  const salesByName = new Map<string, number>();
+
+  salesRows?.forEach((row: any) => {
+    const name = idToName.get(row.id_tienda);
+    if (!name) return;
+    
+    // Sumar 'cantidad' (si no existe o es null, asume 1 por seguridad)
+    const qty = typeof row.cantidad === 'number' ? row.cantidad : 1;
+    salesByName.set(name, (salesByName.get(name) || 0) + qty);
+  });
+
+  // ── Paso 4: Filtrar por activos, ordenar y tomar el top N ─────────────────────
+  const topProductNames = [...salesByName.entries()]
+    .filter(([name]) => namesWithActiveVar.has(name)) // Solo incluir los que tienen 1+ variación activa
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name]) => name);
+
+  // ── Paso 5: Buscar los GroupedProducts para esos nombres ──────────────────
+  const allProducts = await fetchActiveStoreProducts();
+  const result: GroupedProduct[] = [];
+
+  for (const name of topProductNames) {
+    const p = allProducts.find((ap) => ap.name === name);
+    if (p) {
+      result.push({ ...p, totalSales: salesByName.get(name) || 0 });
+    }
+  }
+
+  // Si hay menos de `limit` productos con ventas, rellenar con los restantes activos
+  if (result.length < limit) {
+    for (const p of allProducts) {
+      if (!result.find((r) => r.name === p.name)) {
+        result.push(p);
+        if (result.length >= limit) break;
+      }
+    }
+  }
+
+  return result;
+}
+
 export interface Coupon {
   id: string;
   codigo: string;
