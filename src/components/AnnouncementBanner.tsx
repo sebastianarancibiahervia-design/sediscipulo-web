@@ -2,11 +2,14 @@
 
 import { X } from "lucide-react";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function AnnouncementBanner() {
   const [visible, setVisible] = useState(true);
+  const pathname = usePathname();
 
   if (!visible) return null;
+  if (pathname === "/" || pathname === "/home-preview") return null;
 
   return (
     <div className="relative z-50 w-full bg-black text-white py-2.5 px-4 flex items-center justify-center gap-3 text-sm font-medium tracking-wide">
