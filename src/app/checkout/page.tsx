@@ -49,7 +49,7 @@ export default function CheckoutPage() {
         setDiscount(0);
         setCouponId(undefined);
       }
-    } catch (error) {
+    } catch {
       setCouponError("Error al validar el cupón.");
     } finally {
       setIsApplying(false);
@@ -336,7 +336,7 @@ export default function CheckoutPage() {
                   <Clock size={18} className="text-charcoal/40" /> Próximos pasos
                 </h4>
                 <p className="text-sm text-charcoal/60 leading-relaxed">
-                  Estamos verificando disponibilidad. Una vez confirmado, te enviaremos un correo electrónico a <span className="font-bold text-charcoal">{orderEmail}</span> con los detalles para realizar el pago y pasar tu pedido al estado "Confirmado".
+                  Estamos verificando disponibilidad. Una vez confirmado, te enviaremos un correo electrónico a <span className="font-bold text-charcoal">{orderEmail}</span> con los detalles para realizar el pago y pasar tu pedido al estado &quot;Confirmado&quot;.
                 </p>
               </div>
 

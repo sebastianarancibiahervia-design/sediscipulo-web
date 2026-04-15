@@ -29,7 +29,7 @@ export default function PedidosPersonalizadosPage() {
       if (file && file.size > 0) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("form_personalizados")
           .upload(fileName, file);
         
@@ -59,7 +59,7 @@ export default function PedidosPersonalizadosPage() {
       if (insertError) throw insertError;
 
       router.push("/pedidos-personalizados/gracias");
-    } catch (error: any) {
+    } catch (error: Error | any) {
       console.error("Error submitting form:", error);
       alert("Hubo un error al enviar tu solicitud: " + error.message);
     } finally {

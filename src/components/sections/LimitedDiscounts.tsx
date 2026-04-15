@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { fetchActivePromotions, Promocion, generateSlug } from "@/lib/store/storeServices";
 import { getProductImageUrl } from "@/components/store/ProductCard";
 
@@ -81,7 +82,7 @@ export default function LimitedDiscounts() {
           const talla = detail.tienda?.inventario_base?.talla || "N/A";
           const diseno = detail.tienda?.disenos?.color || "Sin diseño";
           
-          let queryString = [];
+          const queryString = [];
           if (color !== "N/A") queryString.push(`colorPrenda=${encodeURIComponent(color)}`);
           if (talla !== "N/A") queryString.push(`talla=${encodeURIComponent(talla)}`);
           if (diseno !== "Sin diseño") queryString.push(`colorDiseno=${encodeURIComponent(diseno)}`);
@@ -180,10 +181,12 @@ export default function LimitedDiscounts() {
                 >
                   {/* Imagen de fondo */}
                   {item.image ? (
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.name}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 z-0"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-700 z-0"
+                      sizes="(max-width: 768px) 100vw, 400px"
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 z-0">

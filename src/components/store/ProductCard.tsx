@@ -32,10 +32,12 @@ export default function ProductCard({ producto }: ProductCardProps) {
         
         {/* Usando la etiqueta solicitada y Next Image como ejemplo */}
         {fullImageUrl && !fullImageUrl.endsWith('/') ? (
-          <img 
+          <Image 
             src={fullImageUrl} 
             alt={producto.name} 
-            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" 
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-700" 
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           />
         ) : (
           <div className="w-full h-full bg-neutral-100 flex items-center justify-center p-6 text-center">

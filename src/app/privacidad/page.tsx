@@ -39,7 +39,7 @@ export default function PoliticaPrivacidad() {
         <section className="mb-12">
           <h2 className="text-xl font-bold mb-4">4. Tus Derechos</h2>
           <p>
-            Puedes acceder, rectificar o eliminar tus datos personales en cualquier momento desde tu sección "Mi Cuenta". Para la eliminación total de la cuenta, puedes contactarnos directamente.
+            Puedes acceder, rectificar o eliminar tus datos personales en cualquier momento desde tu sección &quot;Mi Cuenta&quot;. Para la eliminación total de la cuenta, puedes contactarnos directamente.
           </p>
         </section>
 

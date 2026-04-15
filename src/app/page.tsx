@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import Link from "next/link";
 import { Mail, Lock, User, Phone, Loader2, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 

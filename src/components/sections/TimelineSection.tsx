@@ -64,7 +64,7 @@ export default function TimelineSection() {
 
       // Fade up each item as it enters view
       const items = gsap.utils.toArray<HTMLElement>(".timeline-item");
-      items.forEach((item, i) => {
+      items.forEach((item) => {
         gsap.fromTo(
           item,
           { opacity: 0, y: 50, filter: "blur(5px)" },

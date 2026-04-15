@@ -57,6 +57,12 @@ export interface DetallePromocion {
   tienda?: TiendaItem;
 }
 
+export interface TiendaOrder {
+  id: string;
+  numero: number;
+  monto_total: number;
+}
+
 export interface Promocion {
   id: string;
   nombre: string;
@@ -104,16 +110,16 @@ export async function fetchActivePromotions(): Promise<Promocion[]> {
   }
   
   // Filter out exhausted promotional stock on the client processing side
-  const validData = (data as any[]).map(promo => {
+  const validData = (data as any[] as Promocion[]).map(promo => {
     if (promo.detalle_promociones) {
-      promo.detalle_promociones = promo.detalle_promociones.filter((detail: any) => 
+      promo.detalle_promociones = promo.detalle_promociones.filter((detail: DetallePromocion) => 
         detail.unidades_limitadas === null || detail.unidades_vendidas < detail.unidades_limitadas
       );
     }
     return promo;
   });
   
-  return validData as Promocion[];
+  return validData;
 }
 
 // Utility to create URL-friendly slugs
@@ -161,8 +167,8 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
     .select('id, nombre, familia')
     .eq('activo', true);
 
-  const categoryMap = new Map<string, { nombre: string; familia: string }>();
-  catData?.forEach((c: any) => categoryMap.set(c.id, { nombre: c.nombre, familia: c.familia }));
+  const categoryMap = new Map<string, { nombre: string; familia: string | null }>();
+  (catData as CategoriaProducto[])?.forEach((c) => categoryMap.set(c.id, { nombre: c.nombre, familia: c.familia || null }));
 
   // Fetch Sales counts from detalle_ventas
   const { data: salesData } = await supabase
@@ -170,7 +176,7 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
     .select('id_tienda');
   
   const salesMap = new Map<string, number>();
-  salesData?.forEach((s: any) => {
+  (salesData as { id_tienda: string }[])?.forEach((s) => {
     salesMap.set(s.id_tienda, (salesMap.get(s.id_tienda) || 0) + 1);
   });
 
@@ -297,7 +303,7 @@ export async function fetchTopHistoricalSellers(limit = 3): Promise<GroupedProdu
   // Nombres de producto que tienen al menos una variación activa
   const namesWithActiveVar = new Set<string>();
 
-  tiendaItems.forEach((t: any) => {
+  tiendaItems.forEach((t) => {
     idToName.set(t.id, t.producto_tienda);
     if (t.activo) {
       namesWithActiveVar.add(t.producto_tienda);
@@ -318,7 +324,7 @@ export async function fetchTopHistoricalSellers(limit = 3): Promise<GroupedProdu
   // ── Paso 3: Agrupar por nombre de producto y SUMAR cantidad ──────────────
   const salesByName = new Map<string, number>();
 
-  salesRows?.forEach((row: any) => {
+  salesRows?.forEach((row) => {
     const name = idToName.get(row.id_tienda);
     if (!name) return;
     
@@ -476,7 +482,7 @@ export async function createOrder(
   }
 
   // 1. Get next correlative number
-  const { data: lastOrders, error: fetchError } = await supabase
+  const { data: lastOrders } = await supabase
     .from('ventas')
     .select('numero')
     .order('numero', { ascending: false })
@@ -565,7 +571,7 @@ export async function uploadPaymentReceipt(file: File, orderNumber: number) {
   return data.path;
 }
 
-export async function processOrderPayment(order: any, receiptPath: string) {
+export async function processOrderPayment(order: TiendaOrder, receiptPath: string) {
   // 1. Update status in 'ventas' table
   const { error: ventaError } = await supabase
     .from('ventas')
@@ -648,13 +654,14 @@ export async function fetchProductReviews(variationIds: string[]): Promise<Produ
     return [];
   }
 
-  return (data || []).map((r: any) => {
+  return (data as any[] || []).map((r) => {
     let variacion_texto = "";
     if (r.tienda) {
       const vars = [];
-      if (r.tienda.inventario_base?.color) vars.push(`Color: ${r.tienda.inventario_base.color}`);
-      if (r.tienda.disenos?.color) vars.push(`Diseño: ${r.tienda.disenos.color}`);
-      if (r.tienda.inventario_base?.talla) vars.push(`Talla: ${r.tienda.inventario_base.talla}`);
+      const tienda = r.tienda as any;
+      if (tienda.inventario_base?.color) vars.push(`Color: ${tienda.inventario_base.color}`);
+      if (tienda.disenos?.color) vars.push(`Diseño: ${tienda.disenos.color}`);
+      if (tienda.inventario_base?.talla) vars.push(`Talla: ${tienda.inventario_base.talla}`);
       variacion_texto = vars.join(" | ");
     }
     
@@ -667,7 +674,7 @@ export async function fetchProductReviews(variationIds: string[]): Promise<Produ
       created_at: r.created_at,
       cliente_nombre: r.clientes?.nombre || 'Cliente',
       variacion_texto
-    };
+    } as ProductReview;
   });
 }
 
@@ -714,7 +721,7 @@ export async function fetchClientReviewedProducts(idCliente: string): Promise<st
     return [];
   }
 
-  return (data || []).map((r: any) => r.id_tienda);
+  return (data || []).map((r) => r.id_tienda);
 }
 
 /**
@@ -752,11 +759,11 @@ export async function fetchReviewableProducts(
 
   // 3. Extraer productos únicos no calificados
   const seen = new Set<string>();
-  const result: { id_tienda: string; producto_tienda: string; imagen_url: string }[] = [];
+  const result: { id_tienda: string; producto_tienda: string; imagen_url: string; variacion_texto?: string }[] = [];
 
-  for (const venta of ventas) {
-    for (const detalle of (venta as any).detalle_ventas || []) {
-      const tienda = detalle.tienda;
+  for (const venta of (ventas as any[])) {
+    for (const detalle of (venta.detalle_ventas || [])) {
+      const tienda = (detalle as any).tienda;
       if (!tienda || reviewedSet.has(tienda.id) || seen.has(tienda.id)) continue;
       seen.add(tienda.id);
 

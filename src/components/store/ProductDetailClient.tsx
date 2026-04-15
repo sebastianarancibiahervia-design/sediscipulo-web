@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -68,7 +69,7 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
     } else {
       setSelectedDesignColor("");
     }
-  }, [uniqueDesignColors]);
+  }, [uniqueDesignColors, selectedDesignColor]);
 
   // Find the matching variation
   const matchedVariation = useMemo(() => {
@@ -89,7 +90,7 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
     if (initialPath) {
       setActiveImage(getProductImageUrl(initialPath));
     }
-  }, [product.imagePrincipal]);
+  }, [product.imagePrincipal, matchedVariation?.imagen_url]);
 
   useEffect(() => {
     if (matchedVariation?.imagen_url) {
@@ -130,10 +131,13 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
         <div className="space-y-4">
           <div className="aspect-[4/5] relative bg-neutral-100 rounded-3xl overflow-hidden border border-black/5">
             {activeImage && !activeImage.endsWith('/') ? (
-              <img 
+              <Image 
                 src={activeImage} 
                 alt={product.name}
-                className="object-cover w-full h-full"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-center p-12">
@@ -151,13 +155,25 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
                 onClick={() => setActiveImage(getProductImageUrl(matchedVariation.imagen_url))}
                 className={`w-20 h-24 relative rounded-xl overflow-hidden border-2 ${activeImage === getProductImageUrl(matchedVariation.imagen_url) ? 'border-charcoal' : 'border-transparent'}`}
               >
-                <img src={getProductImageUrl(matchedVariation.imagen_url)} alt="Vista 1" className="object-cover w-full h-full" />
+                <Image 
+                  src={getProductImageUrl(matchedVariation.imagen_url)} 
+                  alt="Vista 1" 
+                  fill
+                  className="object-cover"
+                  sizes="80px"
+                />
               </button>
               <button 
                 onClick={() => setActiveImage(getProductImageUrl(matchedVariation.imagen_url_2!))}
                 className={`w-20 h-24 relative rounded-xl overflow-hidden border-2 ${activeImage === getProductImageUrl(matchedVariation.imagen_url_2!) ? 'border-charcoal' : 'border-transparent'}`}
               >
-                <img src={getProductImageUrl(matchedVariation.imagen_url_2!)} alt="Vista 2" className="object-cover w-full h-full" />
+                <Image 
+                  src={getProductImageUrl(matchedVariation.imagen_url_2!)} 
+                  alt="Vista 2" 
+                  fill
+                  className="object-cover"
+                  sizes="80px"
+                />
               </button>
             </div>
           )}

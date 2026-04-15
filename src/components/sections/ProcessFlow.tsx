@@ -47,7 +47,7 @@ export default function ProcessFlow() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-24">
           <h2 className="text-3xl md:text-5xl font-sans font-bold text-charcoal mb-4">
-            Trabajamos bajo el modelo <span className="font-serif italic text-black font-medium">"Print on demand"</span>
+            Trabajamos bajo el modelo <span className="font-serif italic text-black font-medium">&quot;Print on demand&quot;</span>
           </h2>
           <p className="text-charcoal/60 max-w-2xl mx-auto text-lg">
             No mantenemos stock de nuestros diseños, sino que los creamos exclusivamente bajo tu pedido.

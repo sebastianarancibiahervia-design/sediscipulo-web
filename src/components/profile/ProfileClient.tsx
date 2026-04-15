@@ -13,18 +13,13 @@ import {
   User as UserIcon, 
   LogOut, 
   ChevronRight, 
-  Clock, 
-  Settings,
-  CreditCard,
   History,
   Loader2,
-  Calendar,
   CheckCircle2,
   ExternalLink,
   X,
   MapPin,
   Fingerprint,
-  Mail,
   AlertCircle,
   Upload,
   Coins,
@@ -36,7 +31,7 @@ import { uploadPaymentReceipt, processOrderPayment } from "@/lib/store/storeServ
 import Image from "next/image";
 
 interface OrderDetailsModalProps {
-  order: any;
+  order: any; // Using any here as it is a deep Supabase join result
   onClose: () => void;
 }
 
@@ -273,10 +268,11 @@ function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                 <button onClick={() => setShowReceipt(false)} className="p-2 text-charcoal/40 hover:bg-black/5 rounded-full"><X size={20} /></button>
               </div>
               <div className="relative aspect-[4/3] bg-neutral-50 rounded-2xl overflow-hidden border border-black/5 shadow-inner">
-                <img 
+                <Image 
                   src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/movimientos_bancarios/${order.movimientos[0].comprobante_url}`} 
                   alt="Comprobante de pago"
-                  className="w-full h-full object-contain"
+                  fill
+                  className="object-contain"
                 />
               </div>
               <div className="mt-6 flex gap-3">

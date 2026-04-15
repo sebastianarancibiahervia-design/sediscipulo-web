@@ -4,13 +4,12 @@ import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { BookOpen, Shirt, PackageOpen, X } from "lucide-react";
+import { BookOpen, PackageOpen, X } from "lucide-react";
 import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
 
 function CotizacionModal({ onClose }: { onClose: () => void }) {
-  const [form, setForm] = useState({ nombre: "", telefono: "", correo: "", detalle: "" });
   const [enviado, setEnviado] = useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -79,7 +78,6 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
                     type={type}
                     required
                     placeholder={placeholder}
-                    value={form[id as keyof typeof form]}
                     name={id}
                     className="w-full px-4 py-3 rounded-xl border border-black/10 bg-neutral-50 text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/30 transition-all"
                   />
@@ -94,7 +92,6 @@ function CotizacionModal({ onClose }: { onClose: () => void }) {
                   required
                   rows={4}
                   placeholder="Ej: 30 poleras talla M para retiro de jóvenes, con diseño personalizado..."
-                  value={form.detalle}
                   name="detalle"
                   className="w-full px-4 py-3 rounded-xl border border-black/10 bg-neutral-50 text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-charcoal/20 focus:border-charcoal/30 transition-all resize-none"
                 />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight, ShoppingCart } from "lucide-react";
@@ -22,6 +23,8 @@ const FALLBACK: GroupedProduct = {
   price: 0,
   categories: [],
   subcategories: [],
+  families: [],
+  url_video: "",
   description: "",
   imagePrincipal: "/maranata-back.jpg",
   totalSales: 0,
@@ -105,10 +108,13 @@ export default function HeroSection({
                 }`}
               >
                 {url && !url.endsWith("/") && (
-                  <img
+                  <Image
                     src={url}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    priority={i === 0}
+                    sizes="100vw"
                   />
                 )}
               </div>
@@ -223,10 +229,12 @@ export default function HeroSection({
                 }`}
               >
                 {url && !url.endsWith("/") ? (
-                  <img
+                  <Image
                     src={url}
                     alt={product.name}
-                    className="w-full h-full object-cover opacity-90"
+                    fill
+                    className="object-cover opacity-90"
+                    sizes="240px"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-neutral-900">
