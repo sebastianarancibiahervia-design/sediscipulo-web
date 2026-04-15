@@ -206,8 +206,8 @@ export default function HeroSection({
           )}
         </div>
 
-        {/* ── Tarjeta del producto activo (bottom-right) ─────────────────── */}
-        <div className="absolute bottom-14 right-6 md:right-14 z-20 w-[180px] md:w-[240px] aspect-[3/4]">
+        {/* ── Tarjeta del producto activo (Desktop) ─────────────────── */}
+        <div className="hidden md:block absolute bottom-14 right-14 z-20 w-[240px] aspect-[3/4]">
           {displayProducts.map((product, i) => {
             const url = getProductImageUrl(product.imagePrincipal);
             const isActive = i === activeIndex;
@@ -247,6 +247,38 @@ export default function HeroSection({
                     Ver Producto <ArrowRight size={10} />
                   </Link>
                 </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Botón del producto activo (Mobile) ─────────────────── */}
+        <div className="absolute md:hidden bottom-8 left-4 right-4 z-20 h-[60px]">
+          {displayProducts.map((product, i) => {
+            const isActive = i === activeIndex;
+            return (
+              <div
+                key={i}
+                className={`absolute inset-0 transition-all duration-700 ease-in-out flex items-center justify-between px-4 py-3 bg-charcoal/80 backdrop-blur-md rounded-xl border border-white/10 shadow-lg ${
+                  isActive
+                    ? "opacity-100 translate-y-0 pointer-events-auto"
+                    : "opacity-0 translate-y-4 pointer-events-none"
+                }`}
+              >
+                <div className="flex-1 overflow-hidden pr-3">
+                  <p className="font-outfit text-sm font-bold text-white truncate">
+                    {product.name}
+                  </p>
+                  <p className="text-[10px] text-white/60 font-mono tracking-widest uppercase">
+                    Ver detalles
+                  </p>
+                </div>
+                <Link
+                  href={`/tienda/${product.slug}`}
+                  className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-white text-charcoal rounded-full hover:bg-neutral-200 transition-colors"
+                >
+                  <ArrowRight size={16} />
+                </Link>
               </div>
             );
           })}

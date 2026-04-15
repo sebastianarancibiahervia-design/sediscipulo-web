@@ -6,7 +6,9 @@ import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { generateSlug } from "@/lib/store/storeServices";
+import RatingModal from "./RatingModal";
 import { 
+  Star,
   Package, 
   User as UserIcon, 
   LogOut, 
@@ -194,31 +196,40 @@ function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
             </div>
 
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
-              {order.detalle_ventas?.map((detalle: any) => (
-                <div key={detalle.id} className="flex gap-4 p-4 rounded-2xl border border-black/5 bg-white group hover:border-charcoal/20 transition-all">
-                  <div className="relative w-20 h-24 bg-neutral-50 rounded-xl overflow-hidden border border-black/5 flex-shrink-0">
-                    <Image 
-                      src={`${process.env.NEXT_PUBLIC_CRM_BASE_URL}${detalle.tienda?.imagen_url || '/placeholder.png'}`}
-                      alt={detalle.tienda?.producto_tienda || "Producto"}
-                      fill
-                      className="object-cover"
-                    />
+              {order.detalle_ventas?.map((detalle: any) => {
+                const variationDetails = [];
+                if (detalle.tienda?.inventario_base?.color) variationDetails.push(`Color: ${detalle.tienda.inventario_base.color}`);
+                if (detalle.tienda?.disenos?.color) variationDetails.push(`Diseño: ${detalle.tienda.disenos.color}`);
+                if (detalle.tienda?.inventario_base?.talla) variationDetails.push(`Talla: ${detalle.tienda.inventario_base.talla}`);
+                const variationString = variationDetails.join(" • ");
+
+                return (
+                  <div key={detalle.id} className="flex gap-4 p-4 rounded-2xl border border-black/5 bg-white group hover:border-charcoal/20 transition-all">
+                    <div className="relative w-20 h-24 bg-neutral-50 rounded-xl overflow-hidden border border-black/5 flex-shrink-0">
+                      <Image 
+                        src={`${process.env.NEXT_PUBLIC_CRM_BASE_URL}${detalle.tienda?.imagen_url || '/placeholder.png'}`}
+                        alt={detalle.tienda?.producto_tienda || "Producto"}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center min-w-0">
+                      <h4 className="font-bold text-charcoal leading-tight mb-0.5 break-words">{detalle.tienda?.producto_tienda || "Item Especial"}</h4>
+                      {variationString && <p className="text-xs font-mono font-medium text-charcoal/40 mb-1 max-w-full break-words">{variationString}</p>}
+                      <p className="text-xs text-charcoal/60 mb-2 flex-shrink-0">Cantidad: {detalle.cantidad} • ${detalle.valor_unitario?.toLocaleString('es-CL')} c/u</p>
+                      <button 
+                        onClick={() => handleProductLink(detalle)}
+                        className="text-xs font-bold text-charcoal flex items-center gap-1.5 hover:underline w-fit"
+                      >
+                        Ver en tienda <ExternalLink size={12} />
+                      </button>
+                    </div>
+                    <div className="text-right flex flex-col justify-center ml-2">
+                      <p className="text-sm font-mono font-bold text-charcoal">${detalle.valor_total?.toLocaleString('es-CL')}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 flex flex-col justify-center">
-                    <h4 className="font-bold text-charcoal leading-tight mb-1">{detalle.tienda?.producto_tienda || "Item Especial"}</h4>
-                    <p className="text-xs text-charcoal/60 mb-2">Cantidad: {detalle.cantidad} • ${detalle.valor_unitario?.toLocaleString('es-CL')} c/u</p>
-                    <button 
-                      onClick={() => handleProductLink(detalle)}
-                      className="text-xs font-bold text-charcoal flex items-center gap-1.5 hover:underline"
-                    >
-                      Ver en tienda <ExternalLink size={12} />
-                    </button>
-                  </div>
-                  <div className="text-right flex flex-col justify-center">
-                    <p className="text-sm font-mono font-bold text-charcoal">${detalle.valor_total?.toLocaleString('es-CL')}</p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             <div className="mt-8 pt-8 border-t border-black/5 space-y-4">
@@ -295,6 +306,7 @@ export default function ProfileClient() {
   const [loadingPedidos, setLoadingPedidos] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<any | null>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   
   // Settings form states
@@ -368,7 +380,11 @@ export default function ProfileClient() {
         ),
         detalle_ventas (
           *,
-          tienda (*)
+          tienda (
+            *,
+            inventario_base (color, talla),
+            disenos (color)
+          )
         )
       `)
       .eq("id_cliente", clientId)
@@ -499,9 +515,19 @@ export default function ProfileClient() {
         <div className="lg:w-3/4">
           {activeTab === "pedidos" ? (
             <div>
-              <header className="mb-10">
-                <h1 className="text-4xl font-sans font-bold text-charcoal mb-2">Historial de <span className="font-serif italic text-black">Pedidos</span></h1>
-                <p className="text-charcoal/60">Gestiona tus compras y pedidos activos</p>
+              <header className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-4xl font-sans font-bold text-charcoal mb-2">Historial de <span className="font-serif italic text-black">Pedidos</span></h1>
+                  <p className="text-charcoal/60">Gestiona tus compras y pedidos activos</p>
+                </div>
+                {pedidos.some(p => p.estado_pedido === 'Entregado') && (
+                  <button 
+                    onClick={() => setShowRatingModal(true)}
+                    className="px-6 py-3 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl font-bold hover:bg-amber-100 transition-all flex items-center gap-2 shadow-sm"
+                  >
+                    <Star size={18} /> Calificar Productos
+                  </button>
+                )}
               </header>
 
               {loadingPedidos ? (
@@ -557,6 +583,7 @@ export default function ProfileClient() {
                               <Coins size={14} /> Ir a pagar
                             </button>
                           )}
+
                           <button 
                             onClick={() => setSelectedOrder(pedido)}
                             className="p-2 text-charcoal/40 hover:text-charcoal hover:bg-black/5 rounded-full transition-all"
@@ -567,22 +594,31 @@ export default function ProfileClient() {
                       </div>
                       <div className="p-6">
                         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-                          {pedido.detalle_ventas?.map((detalle: any) => (
-                            <div key={detalle.id} className="flex-shrink-0 flex items-center gap-4 p-3 rounded-2xl bg-neutral-50 border border-black/5 min-w-[280px]">
-                              <div className="relative w-16 h-16 bg-white rounded-xl overflow-hidden border border-black/5">
-                                <Image 
-                                  src={`${process.env.NEXT_PUBLIC_CRM_BASE_URL}${detalle.tienda?.imagen_url || '/placeholder.png'}`}
-                                  alt={detalle.tienda?.producto_tienda || "Producto"}
-                                  fill
-                                  className="object-cover"
-                                />
+                          {pedido.detalle_ventas?.map((detalle: any) => {
+                            const variationDetails = [];
+                            if (detalle.tienda?.inventario_base?.color) variationDetails.push(`Color: ${detalle.tienda.inventario_base.color}`);
+                            if (detalle.tienda?.disenos?.color) variationDetails.push(`Diseño: ${detalle.tienda.disenos.color}`);
+                            if (detalle.tienda?.inventario_base?.talla) variationDetails.push(`Talla: ${detalle.tienda.inventario_base.talla}`);
+                            const variationString = variationDetails.join(" • ");
+
+                            return (
+                              <div key={detalle.id} className="flex-shrink-0 flex items-center gap-4 p-3 rounded-2xl bg-neutral-50 border border-black/5 min-w-[280px]">
+                                <div className="relative w-16 h-16 bg-white rounded-xl overflow-hidden border border-black/5">
+                                  <Image 
+                                    src={`${process.env.NEXT_PUBLIC_CRM_BASE_URL}${detalle.tienda?.imagen_url || '/placeholder.png'}`}
+                                    alt={detalle.tienda?.producto_tienda || "Producto"}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="text-sm font-bold text-charcoal truncate" title={detalle.tienda?.producto_tienda}>{detalle.tienda?.producto_tienda || "Item Especial"}</h4>
+                                  {variationString && <p className="text-[10px] whitespace-nowrap text-charcoal/40 mt-0.5 truncate" title={variationString}>{variationString}</p>}
+                                  <p className="text-[10px] text-charcoal/60 mt-0.5 whitespace-nowrap">Cantidad: {detalle.cantidad} • ${detalle.valor_unitario?.toLocaleString('es-CL')}</p>
+                                </div>
                               </div>
-                              <div>
-                                <h4 className="text-sm font-bold text-charcoal truncate max-w-[180px]">{detalle.tienda?.producto_tienda || "Item Especial"}</h4>
-                                <p className="text-[10px] text-charcoal/60 mt-0.5">Cantidad: {detalle.cantidad} • ${detalle.valor_unitario?.toLocaleString('es-CL')}</p>
-                              </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       </div>
                     </div>
@@ -765,6 +801,14 @@ export default function ProfileClient() {
           order={paymentOrder} 
           onClose={() => setPaymentOrder(null)} 
           onRefresh={() => fetchOrders(clientData.id)}
+        />
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && clientData && (
+        <RatingModal 
+          clientId={clientData.id}
+          onClose={() => setShowRatingModal(false)}
         />
       )}
     </div>

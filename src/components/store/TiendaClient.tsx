@@ -6,32 +6,64 @@ import ProductCard from "./ProductCard";
 import { GroupedProduct } from "@/lib/store/storeServices";
 
 export default function TiendaClient({ initialProducts }: { initialProducts: GroupedProduct[] }) {
-  const [activeSubcategory, setActiveSubcategory] = useState<string>("TODOS");
+  const [selectedFamily, setSelectedFamily] = useState<string>("TODOS");
+  const [selectedCategory, setSelectedCategory] = useState<string>("TODOS");
   const [sortOrder, setSortOrder] = useState<string>("destacados");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Extract only used subcategories (lowercase names from products)
-  const usedSubcategories = useMemo(() => {
-    const subs = new Set<string>();
+  // Extract families and categories mapping
+  const categoryStructure = useMemo(() => {
+    const families = new Set<string>();
+    const familyToCats = new Map<string, Set<string>>();
+
     initialProducts.forEach(p => {
-      p.subcategories.forEach(s => subs.add(s));
+      p.families.forEach(f => {
+        families.add(f);
+        if (!familyToCats.has(f)) familyToCats.set(f, new Set());
+        
+        // Find which categories of this product belong to this family
+        // Note: In a real scenario, we might need a more precise mapping, 
+        // but for now we'll assume the product's subcategories belong to its families.
+        p.subcategories.forEach(s => familyToCats.get(f)!.add(s));
+      });
     });
-    return Array.from(subs).sort();
+
+    return {
+      families: Array.from(families).sort(),
+      familyToCats: familyToCats
+    };
   }, [initialProducts]);
+
+  // Determine which subcategories to show in the second bar
+  const visibleCategories = useMemo(() => {
+    if (selectedFamily === "TODOS") {
+      const allCats = new Set<string>();
+      categoryStructure.familyToCats.forEach(cats => cats.forEach(c => allCats.add(c)));
+      return Array.from(allCats).sort();
+    }
+    return Array.from(categoryStructure.familyToCats.get(selectedFamily) || []).sort();
+  }, [selectedFamily, categoryStructure]);
 
   // Filtering
   const filteredProducts = useMemo(() => {
     let result = [...initialProducts];
     
-    if (activeSubcategory !== "TODOS") {
-      result = result.filter(p => p.subcategories.includes(activeSubcategory));
+    // Filter by Family
+    if (selectedFamily !== "TODOS") {
+      result = result.filter(p => p.families.includes(selectedFamily));
+    }
+
+    // Filter by Category
+    if (selectedCategory !== "TODOS") {
+      result = result.filter(p => p.subcategories.includes(selectedCategory));
     }
 
     // Sorting
     if (sortOrder === "destacados") {
       result.sort((a, b) => b.totalSales - a.totalSales);
     } else if (sortOrder === "price-asc") {
+      result.sort((a, b) => a.price - b.price);
     } else if (sortOrder === "price-desc") {
       result.sort((a, b) => b.price - a.price);
     } else if (sortOrder === "alpha-asc") {
@@ -41,7 +73,7 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
     }
 
     return result;
-  }, [initialProducts, activeSubcategory, sortOrder]);
+  }, [initialProducts, selectedFamily, selectedCategory, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -50,9 +82,15 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
     currentPage * itemsPerPage
   );
 
-  const handleSubcategoryChange = (sub: string) => {
-    setActiveSubcategory(sub);
-    setCurrentPage(1); // Reset to first page
+  const handleFamilyChange = (family: string) => {
+    setSelectedFamily(family);
+    setSelectedCategory("TODOS"); // Reset category when family changes
+    setCurrentPage(1);
+  };
+
+  const handleCategoryChange = (cat: string) => {
+    setSelectedCategory(cat);
+    setCurrentPage(1);
   };
 
   return (
@@ -88,32 +126,66 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
           </div>
         </div>
 
-        {/* Categories Banner (Horizontal) */}
-        <div className="border-y border-black/5 py-6">
-          <div className="flex flex-nowrap overflow-x-auto gap-4 scrollbar-hide no-scrollbar">
-            <button
-              onClick={() => handleSubcategoryChange("TODOS")}
-              className={`flex-shrink-0 px-6 py-2 rounded-full text-xs font-bold transition-all border ${
-                activeSubcategory === "TODOS"
-                  ? "bg-charcoal text-white border-charcoal"
-                  : "bg-white text-charcoal/40 border-black/5 hover:border-black/20"
-              }`}
-            >
-              TODOS
-            </button>
-            {usedSubcategories.map((sub) => (
+        {/* Filter Section */}
+        <div className="flex flex-col gap-4 border-y border-black/5 py-8">
+          {/* Level 1: Families */}
+          <div className="space-y-3">
+            <span className="text-[10px] font-bold text-charcoal/30 uppercase tracking-[0.2em] px-1">Familia</span>
+            <div className="flex flex-nowrap overflow-x-auto gap-3 scrollbar-hide no-scrollbar pb-2">
               <button
-                key={sub}
-                onClick={() => handleSubcategoryChange(sub)}
-                className={`flex-shrink-0 px-6 py-2 rounded-full text-xs font-bold transition-all border uppercase ${
-                  activeSubcategory === sub
-                    ? "bg-charcoal text-white border-charcoal"
+                onClick={() => handleFamilyChange("TODOS")}
+                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-xs font-bold transition-all border ${
+                  selectedFamily === "TODOS"
+                    ? "bg-charcoal text-white border-charcoal shadow-md scale-105"
                     : "bg-white text-charcoal/40 border-black/5 hover:border-black/20"
                 }`}
               >
-                {sub}
+                TODOS
               </button>
-            ))}
+              {categoryStructure.families.map((family) => (
+                <button
+                  key={family}
+                  onClick={() => handleFamilyChange(family)}
+                  className={`flex-shrink-0 px-6 py-2.5 rounded-full text-xs font-bold transition-all border uppercase ${
+                    selectedFamily === family
+                      ? "bg-charcoal text-white border-charcoal shadow-md scale-105"
+                      : "bg-white text-charcoal/40 border-black/5 hover:border-black/20"
+                  }`}
+                >
+                  {family}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Level 2: Categories (Nombre) */}
+          <div className="space-y-3 pt-2">
+            <span className="text-[10px] font-bold text-charcoal/30 uppercase tracking-[0.2em] px-1">Categoría</span>
+            <div className="flex flex-nowrap overflow-x-auto gap-3 scrollbar-hide no-scrollbar pb-2">
+              <button
+                onClick={() => handleCategoryChange("TODOS")}
+                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-xs font-bold transition-all border ${
+                  selectedCategory === "TODOS"
+                    ? "bg-charcoal/80 text-white border-charcoal/80 shadow-sm"
+                    : "bg-neutral-50 text-charcoal/40 border-black/5 hover:border-black/20"
+                }`}
+              >
+                {selectedFamily === "TODOS" ? "TODAS" : `TODO EN ${selectedFamily}`}
+              </button>
+              {visibleCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`flex-shrink-0 px-6 py-2.5 rounded-full text-xs font-bold transition-all border uppercase ${
+                    selectedCategory === cat
+                      ? "bg-charcoal/80 text-white border-charcoal/80 shadow-sm"
+                      : "bg-neutral-50 text-charcoal/40 border-black/5 hover:border-black/20"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

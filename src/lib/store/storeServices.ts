@@ -24,11 +24,13 @@ export interface TiendaItem {
   subcategorias: string[] | null; // Array of UUIDs
   inventario_base: InventarioBase | null;
   disenos: Diseno | null;
+  url_video: string | null;
 }
 
 export interface CategoriaProducto {
   id: string; // UUID
   nombre: string;
+  familia: string | null;
 }
 
 export interface GroupedProduct {
@@ -37,10 +39,12 @@ export interface GroupedProduct {
   price: number;
   categories: string[];
   subcategories: string[]; // List of names
+  families: string[]; // List of family names
   description: string;
   imagePrincipal: string; 
   totalSales: number;
   variations: TiendaItem[];
+  url_video: string | null;
 }
 
 export interface DetallePromocion {
@@ -139,6 +143,7 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
       imagen_url_2, 
       activo,
       subcategorias,
+      url_video,
       inventario_base (id, talla, color),
       disenos (id, color)
     `)
@@ -153,11 +158,11 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
   // Fetch Category labels
   const { data: catData } = await supabase
     .from('categorias_producto')
-    .select('id, nombre')
+    .select('id, nombre, familia')
     .eq('activo', true);
 
-  const categoryMap = new Map<string, string>();
-  catData?.forEach((c: any) => categoryMap.set(c.id, c.nombre));
+  const categoryMap = new Map<string, { nombre: string; familia: string }>();
+  catData?.forEach((c: any) => categoryMap.set(c.id, { nombre: c.nombre, familia: c.familia }));
 
   // Fetch Sales counts from detalle_ventas
   const { data: salesData } = await supabase
@@ -190,10 +195,12 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
         price: item.valor_tienda, 
         categories: item.categoria ? [item.categoria] : [],
         subcategories: [],
+        families: [],
         description: item.descripcion || '',
         imagePrincipal: item.imagen_principal || '',
         totalSales: 0,
         variations: [],
+        url_video: item.url_video,
       });
       if (item.imagen_principal) {
         topVariationSales.set(name, itemSales);
@@ -216,12 +223,17 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
       group.categories.push(item.categoria);
     }
 
-    // Resolve subcategories
+    // Resolve subcategories and families
     if (item.subcategorias && Array.isArray(item.subcategorias)) {
       item.subcategorias.forEach(subId => {
-        const label = categoryMap.get(subId);
-        if (label && !group.subcategories.includes(label)) {
-          group.subcategories.push(label);
+        const catInfo = categoryMap.get(subId);
+        if (catInfo) {
+          if (!group.subcategories.includes(catInfo.nombre)) {
+            group.subcategories.push(catInfo.nombre);
+          }
+          if (catInfo.familia && !group.families.includes(catInfo.familia)) {
+            group.families.push(catInfo.familia);
+          }
         }
       });
     }
@@ -238,6 +250,10 @@ export async function fetchActiveStoreProducts(): Promise<GroupedProduct[]> {
 
     if (!group.description && item.descripcion) {
       group.description = item.descripcion;
+    }
+
+    if (!group.url_video && item.url_video) {
+      group.url_video = item.url_video;
     }
     
     group.variations.push(item);
@@ -584,4 +600,180 @@ export async function processOrderPayment(order: any, receiptPath: string) {
   // but in a production app we might use a RPC or transaction.
 
   return { success: true };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CALIFICACIONES / RESEÑAS
+// ═══════════════════════════════════════════════════════════════
+
+export interface ProductReview {
+  id: string;
+  id_tienda: string;
+  id_cliente: string;
+  stars: number;
+  comment: string | null;
+  created_at: string;
+  cliente_nombre: string;
+  variacion_texto?: string;
+}
+
+/**
+ * Obtiene todas las calificaciones de un producto agrupado (por nombre).
+ * Como un GroupedProduct tiene múltiples variaciones (id_tienda),
+ * buscamos reviews para TODOS esos IDs.
+ */
+export async function fetchProductReviews(variationIds: string[]): Promise<ProductReview[]> {
+  if (!variationIds.length) return [];
+
+  const { data, error } = await supabase
+    .from('tienda_calificaciones')
+    .select(`
+      id,
+      id_tienda,
+      id_cliente,
+      stars,
+      comment,
+      created_at,
+      clientes ( nombre ),
+      tienda (
+        inventario_base (talla, color),
+        disenos (color)
+      )
+    `)
+    .in('id_tienda', variationIds)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Error fetching reviews:", error);
+    return [];
+  }
+
+  return (data || []).map((r: any) => {
+    let variacion_texto = "";
+    if (r.tienda) {
+      const vars = [];
+      if (r.tienda.inventario_base?.color) vars.push(`Color: ${r.tienda.inventario_base.color}`);
+      if (r.tienda.disenos?.color) vars.push(`Diseño: ${r.tienda.disenos.color}`);
+      if (r.tienda.inventario_base?.talla) vars.push(`Talla: ${r.tienda.inventario_base.talla}`);
+      variacion_texto = vars.join(" | ");
+    }
+    
+    return {
+      id: r.id,
+      id_tienda: r.id_tienda,
+      id_cliente: r.id_cliente,
+      stars: r.stars,
+      comment: r.comment,
+      created_at: r.created_at,
+      cliente_nombre: r.clientes?.nombre || 'Cliente',
+      variacion_texto
+    };
+  });
+}
+
+/**
+ * Envía una calificación para un producto específico (id_tienda).
+ */
+export async function submitProductReview(
+  idTienda: string,
+  idCliente: string,
+  stars: number,
+  comment: string
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('tienda_calificaciones')
+    .insert({
+      id_tienda: idTienda,
+      id_cliente: idCliente,
+      stars,
+      comment: comment.trim() || null,
+    });
+
+  if (error) {
+    if (error.code === '23505') {
+      return { success: false, error: 'Ya calificaste este producto.' };
+    }
+    console.error("Error submitting review:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Obtiene los id_tienda que un cliente ya calificó.
+ */
+export async function fetchClientReviewedProducts(idCliente: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('tienda_calificaciones')
+    .select('id_tienda')
+    .eq('id_cliente', idCliente);
+
+  if (error) {
+    console.error("Error fetching reviewed products:", error);
+    return [];
+  }
+
+  return (data || []).map((r: any) => r.id_tienda);
+}
+
+/**
+ * Obtiene los productos que un cliente puede calificar
+ * (de pedidos con estado 'Entregado') y que aún no ha calificado.
+ */
+export async function fetchReviewableProducts(
+  idCliente: string
+): Promise<{ id_tienda: string; producto_tienda: string; imagen_url: string; variacion_texto?: string }[]> {
+  // 1. Traer todas las ventas entregadas de este cliente
+  const { data: ventas, error: ventasErr } = await supabase
+    .from('ventas')
+    .select(`
+      id,
+      detalle_ventas (
+        id_tienda,
+        tienda ( 
+          id, producto_tienda, imagen_url,
+          inventario_base (color, talla),
+          disenos (color)
+        )
+      )
+    `)
+    .eq('id_cliente', idCliente)
+    .eq('estado_pedido', 'Entregado');
+
+  if (ventasErr || !ventas) {
+    console.error("Error fetching reviewable products:", ventasErr);
+    return [];
+  }
+
+  // 2. Traer los ya calificados
+  const reviewed = await fetchClientReviewedProducts(idCliente);
+  const reviewedSet = new Set(reviewed);
+
+  // 3. Extraer productos únicos no calificados
+  const seen = new Set<string>();
+  const result: { id_tienda: string; producto_tienda: string; imagen_url: string }[] = [];
+
+  for (const venta of ventas) {
+    for (const detalle of (venta as any).detalle_ventas || []) {
+      const tienda = detalle.tienda;
+      if (!tienda || reviewedSet.has(tienda.id) || seen.has(tienda.id)) continue;
+      seen.add(tienda.id);
+
+      const vars = [];
+      if (tienda.inventario_base?.color) vars.push(`Color: ${tienda.inventario_base.color}`);
+      if (tienda.disenos?.color) vars.push(`Diseño: ${tienda.disenos.color}`);
+      if (tienda.inventario_base?.talla) vars.push(`Talla: ${tienda.inventario_base.talla}`);
+      const variacion_texto = vars.join(" • ");
+
+      result.push({
+        id_tienda: tienda.id,
+        producto_tienda: tienda.producto_tienda,
+        imagen_url: tienda.imagen_url || '',
+        variacion_texto
+      });
+    }
+  }
+
+  return result;
 }
