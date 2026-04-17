@@ -199,28 +199,37 @@ function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                 const variationString = variationDetails.join(" • ");
 
                 return (
-                  <div key={detalle.id} className="flex gap-4 p-4 rounded-2xl border border-black/5 bg-white group hover:border-charcoal/20 transition-all">
+                  <div key={detalle.id} className={`flex gap-4 p-4 rounded-2xl border ${detalle.stock_disponible === false ? 'border-red-200/50 bg-red-50/30' : 'border-black/5 bg-white group hover:border-charcoal/20'} transition-all`}>
                     <div className="relative w-20 h-24 bg-neutral-50 rounded-xl overflow-hidden border border-black/5 flex-shrink-0">
                       <Image 
                         src={`${process.env.NEXT_PUBLIC_CRM_BASE_URL}${detalle.tienda?.imagen_url || '/placeholder.png'}`}
                         alt={detalle.tienda?.producto_tienda || "Producto"}
                         fill
-                        className="object-cover"
+                        className={`object-cover ${detalle.stock_disponible === false ? 'grayscale opacity-50' : ''}`}
                       />
                     </div>
-                    <div className="flex-1 flex flex-col justify-center min-w-0">
-                      <h4 className="font-bold text-charcoal leading-tight mb-0.5 break-words">{detalle.tienda?.producto_tienda || "Item Especial"}</h4>
+                    <div className={`flex-1 flex flex-col justify-center min-w-0 ${detalle.stock_disponible === false ? 'opacity-60' : ''}`}>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h4 className="font-bold text-charcoal leading-tight break-words">{detalle.tienda?.producto_tienda || "Item Especial"}</h4>
+                        {detalle.stock_disponible === false && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-red-100 text-red-700 whitespace-nowrap">Sin Stock</span>
+                        )}
+                      </div>
                       {variationString && <p className="text-xs font-mono font-medium text-charcoal/40 mb-1 max-w-full break-words">{variationString}</p>}
                       <p className="text-xs text-charcoal/60 mb-2 flex-shrink-0">Cantidad: {detalle.cantidad} • ${detalle.valor_unitario?.toLocaleString('es-CL')} c/u</p>
-                      <button 
-                        onClick={() => handleProductLink(detalle)}
-                        className="text-xs font-bold text-charcoal flex items-center gap-1.5 hover:underline w-fit"
-                      >
-                        Ver en tienda <ExternalLink size={12} />
-                      </button>
+                      {detalle.stock_disponible !== false && (
+                        <button 
+                          onClick={() => handleProductLink(detalle)}
+                          className="text-xs font-bold text-charcoal flex items-center gap-1.5 hover:underline w-fit"
+                        >
+                          Ver en tienda <ExternalLink size={12} />
+                        </button>
+                      )}
                     </div>
                     <div className="text-right flex flex-col justify-center ml-2">
-                      <p className="text-sm font-mono font-bold text-charcoal">${detalle.valor_total?.toLocaleString('es-CL')}</p>
+                      <p className={`text-sm font-mono font-bold ${detalle.stock_disponible === false ? 'text-charcoal/30 line-through decoration-red-500' : 'text-charcoal'}`}>
+                        ${detalle.valor_total?.toLocaleString('es-CL')}
+                      </p>
                     </div>
                   </div>
                 )
@@ -299,6 +308,7 @@ export default function ProfileClient() {
   const [activeTab, setActiveTab] = useState<"pedidos" | "datos">("pedidos");
   const [clientData, setClientData] = useState<any>(null);
   const [pedidos, setPedidos] = useState<any[]>([]);
+  const [esperandoStock, setEsperandoStock] = useState<any[]>([]);
   const [loadingPedidos, setLoadingPedidos] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<any | null>(null);
@@ -389,6 +399,25 @@ export default function ProfileClient() {
     if (!error && sales) {
       setPedidos(sales);
     }
+    
+    // Fetch from 'ventas_esperando_stock'
+    const { data: waitlist, error: waitlistError } = await supabase
+      .from("ventas_esperando_stock")
+      .select(`
+        *,
+        tienda (
+          *,
+          inventario_base (color, talla),
+          disenos (color)
+        )
+      `)
+      .eq("id_cliente", clientId)
+      .order("created_at", { ascending: false });
+
+    if (!waitlistError && waitlist) {
+      setEsperandoStock(waitlist);
+    }
+    
     setLoadingPedidos(false);
   };
 
@@ -621,6 +650,55 @@ export default function ProfileClient() {
                   ))}
                 </div>
               )}
+              
+              {/* Waitlist Section */}
+              {!loadingPedidos && esperandoStock.length > 0 && (
+                <div className="mt-12">
+                  <h3 className="text-xl font-bold text-charcoal mb-6 flex items-center gap-2">
+                    <AlertCircle size={20} className="text-amber-500" />
+                    Productos esperando stock
+                  </h3>
+                  <div className="space-y-4">
+                    {esperandoStock.map((item) => {
+                      const variationDetails = [];
+                      if (item.tienda?.inventario_base?.color) variationDetails.push(`Color: ${item.tienda.inventario_base.color}`);
+                      if (item.tienda?.disenos?.color) variationDetails.push(`Diseño: ${item.tienda.disenos.color}`);
+                      if (item.tienda?.inventario_base?.talla) variationDetails.push(`Talla: ${item.tienda.inventario_base.talla}`);
+                      const variationString = variationDetails.join(" • ");
+
+                      return (
+                        <div key={item.id} className="bg-white border border-amber-200/50 rounded-2xl overflow-hidden shadow-sm flex items-center gap-4 p-4 hover:border-amber-300 transition-all">
+                          <div className="relative w-20 h-20 bg-neutral-50 rounded-xl overflow-hidden border border-black/5 flex-shrink-0">
+                            <Image 
+                              src={`${process.env.NEXT_PUBLIC_CRM_BASE_URL}${item.tienda?.imagen_url || '/placeholder.png'}`}
+                              alt={item.tienda?.producto_tienda || "Producto"}
+                              fill
+                              className="object-cover grayscale"
+                            />
+                            <div className="absolute inset-0 bg-amber-500/10" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-sm font-bold text-charcoal truncate">{item.tienda?.producto_tienda || "Producto no encontrado"}</h4>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">
+                                {item.estado_aviso || 'A la espera'}
+                              </span>
+                            </div>
+                            {variationString && <p className="text-[10px] text-charcoal/40 truncate">{variationString}</p>}
+                            <p className="text-[10px] text-charcoal/60 mt-1">
+                              Quisiste llevar: <span className="font-bold">{item.cantidad} unidades</span>
+                            </p>
+                          </div>
+                          <div className="hidden sm:block text-right pr-4">
+                            <p className="text-xs text-charcoal/40 font-medium">Te avisaremos cuando</p>
+                            <p className="text-xs font-bold text-charcoal">vuelva a estar disponible</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-12">
@@ -664,7 +742,7 @@ export default function ProfileClient() {
                             className="w-full px-4 py-3 bg-neutral-100 border border-black/5 rounded-xl text-charcoal/40 cursor-not-allowed"
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                            <Link href="mailto:sediscipulo@agenciatab.cl" className="text-[10px] font-bold text-charcoal hover:underline">Contactar soporte</Link>
+                            <Link href="mailto:contacto@sediscipulo.cl" className="text-[10px] font-bold text-charcoal hover:underline">Contactar soporte</Link>
                           </div>
                         </div>
                       </div>

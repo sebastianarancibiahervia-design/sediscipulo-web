@@ -48,6 +48,20 @@ Almacena las reseñas y valoraciones de los productos por parte de los clientes.
 > [!IMPORTANT]
 > **Integridad de Datos**: Existe una restricción `UNIQUE(id_tienda, id_cliente)` para evitar duplicidad de reseñas por producto por usuario.
 
+### `ventas_esperando_stock`
+Almacena los productos de una venta que no pudieron ser procesados por falta de inventario (patrón Waitlist o Backorder).
+
+| Columna | Tipo | Descripción |
+| :--- | :--- | :--- |
+| `id` | UUID | Identificador único (PK). |
+| `id_cliente` | UUID | FK a `clientes(id)`. |
+| `id_tienda` | UUID | FK a `tienda(id)`. |
+| `id_venta_original` | UUID | FK a `ventas(id)` (Nullable) donde ocurrió el quiebre. |
+| `cantidad` | INT | Cantidad solicitada originalmente. |
+| `precio_ofertado` | INT | Precio ofrecido en el momento de la venta original (opcional para mantener precio). |
+| `estado_aviso` | VARCHAR | Ej: `Esperando stock`, `Notificado`, `Comprado_posteriormente`. |
+| `created_at` | TIMESTAMPTZ | Fecha de creación del registro. |
+
 ## Relaciones Clave
 - **Filtros de Tienda**: Un producto en `tienda` se vincula a múltiples registros de `categorias_producto` a través de la columna `subcategorias`.
 - **Jerarquía UI**: `familia` (Agrupador) -> `nombre` (Categoría específica).

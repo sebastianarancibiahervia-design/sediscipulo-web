@@ -602,8 +602,49 @@ export async function processOrderPayment(order: TiendaOrder, receiptPath: strin
     console.error("Error creating bank movement record:", movError);
     throw new Error(`Error al registrar el movimiento bancario: ${movError.message}`);
   }
-  // Note: We don't rollback the sale status here to avoid weird UI states, 
-  // but in a production app we might use a RPC or transaction.
+
+  // 3. Move 'stock_disponible = false' items to Waitlist and delete them from 'detalle_ventas'
+  const { data: outOfStockItems } = await supabase
+    .from('detalle_ventas')
+    .select('*')
+    .eq('id_venta', order.id)
+    .eq('stock_disponible', false);
+
+  if (outOfStockItems && outOfStockItems.length > 0) {
+    // Get client id from order
+    const { data: ventaRow } = await supabase
+      .from('ventas')
+      .select('id_cliente')
+      .eq('id', order.id)
+      .single();
+
+    if (ventaRow) {
+      const waitlistRecords = outOfStockItems.map(item => ({
+        id_cliente: ventaRow.id_cliente,
+        id_tienda: item.id_tienda,
+        id_venta_original: order.id,
+        cantidad: item.cantidad,
+        precio_ofertado: item.valor_unitario,
+        estado_aviso: 'Esperando stock'
+      }));
+
+      // Insert into new table
+      const { error: insertErr } = await supabase
+        .from('ventas_esperando_stock')
+        .insert(waitlistRecords);
+
+      if (!insertErr) {
+        // Delete original details to clean the order
+        await supabase
+          .from('detalle_ventas')
+          .delete()
+          .eq('id_venta', order.id)
+          .eq('stock_disponible', false);
+      } else {
+        console.error("Error moving items to waitlist:", insertErr);
+      }
+    }
+  }
 
   return { success: true };
 }

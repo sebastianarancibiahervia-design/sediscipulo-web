@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -10,6 +10,31 @@ export default function PedidosPersonalizadosPage() {
   const [selectedImage, setSelectedImage] = useState<null | {src: string, alt: string}>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const [defaultNombre, setDefaultNombre] = useState("");
+  const [defaultTelefono, setDefaultTelefono] = useState("");
+  const [defaultEmail, setDefaultEmail] = useState("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setDefaultEmail(session.user.email || "");
+        
+        const { data: client } = await supabase
+          .from("clientes")
+          .select("nombre, telefono")
+          .eq("user_id", session.user.id)
+          .single();
+          
+        if (client) {
+          setDefaultNombre(client.nombre || "");
+          setDefaultTelefono(client.telefono || "");
+        }
+      }
+    };
+    fetchUserData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,6 +82,28 @@ export default function PedidosPersonalizadosPage() {
         });
 
       if (insertError) throw insertError;
+
+      // 4. Send email notification via FormSubmit (AJAX request to avoid page redirection)
+      try {
+        await fetch("https://formsubmit.co/ajax/contacto@sediscipulo.cl", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            _subject: `Nuevo Pedido Personalizado - ${nombre}`,
+            "Nombre del cliente": nombre,
+            "Teléfono": telefono,
+            "Correo": email,
+            "Detalles del Pedido": detalles,
+            "Imagen de Referencia": imagen_url ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/form_personalizados/${imagen_url}` : "Ninguna"
+          })
+        });
+      } catch (emailError) {
+        console.error("Error al enviar el correo de notificación:", emailError);
+        // Continuamos de todas formas ya que los datos se guardaron en la base de datos
+      }
 
       router.push("/pedidos-personalizados/gracias");
     } catch (error: Error | any) {
@@ -127,17 +174,17 @@ export default function PedidosPersonalizadosPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label htmlFor="nombre" className="text-sm font-semibold text-charcoal/80">Nombre Completo</label>
-                <input required type="text" id="nombre" name="nombre" className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-charcoal" placeholder="Ej. Juan Pérez" />
+                <input required type="text" id="nombre" name="nombre" value={defaultNombre} onChange={(e) => setDefaultNombre(e.target.value)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-charcoal" placeholder="Ej. Juan Pérez" />
               </div>
               <div className="space-y-2">
                 <label htmlFor="telefono" className="text-sm font-semibold text-charcoal/80">Número de Contacto</label>
-                <input required type="tel" id="telefono" name="telefono" className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-charcoal" placeholder="+56 9 1234 5678" />
+                <input required type="tel" id="telefono" name="telefono" value={defaultTelefono} onChange={(e) => setDefaultTelefono(e.target.value)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-charcoal" placeholder="+56 9 1234 5678" />
               </div>
             </div>
 
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-semibold text-charcoal/80">Correo Electrónico</label>
-              <input required type="email" id="email" name="email" className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-charcoal" placeholder="tu@correo.com" />
+              <input required type="email" id="email" name="email" value={defaultEmail} onChange={(e) => setDefaultEmail(e.target.value)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-charcoal" placeholder="tu@correo.com" />
             </div>
 
             <div className="space-y-2">
