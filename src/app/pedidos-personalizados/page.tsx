@@ -83,22 +83,28 @@ export default function PedidosPersonalizadosPage() {
 
       if (insertError) throw insertError;
 
-      // 4. Send email notification via FormSubmit (AJAX request to avoid page redirection)
+      // 4. Send email notification via FormSubmit (AJAX request with FormData for attachment)
       try {
+        const formSubmitData = new FormData();
+        formSubmitData.append("_subject", `Nuevo Pedido Personalizado - ${nombre}`);
+        formSubmitData.append("Nombre del cliente", nombre);
+        formSubmitData.append("Teléfono", telefono);
+        formSubmitData.append("Correo", email);
+        formSubmitData.append("Detalles del Pedido", detalles);
+        
+        if (file && file.size > 0) {
+          formSubmitData.append("attachment", file);
+        } else if (imagen_url) {
+          // Fallback just in case we only have the URL
+          formSubmitData.append("Enlace a Imagen de Referencia", `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/form_personalizados/${imagen_url}`);
+        }
+
         await fetch("https://formsubmit.co/ajax/contacto@sediscipulo.cl", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             "Accept": "application/json"
           },
-          body: JSON.stringify({
-            _subject: `Nuevo Pedido Personalizado - ${nombre}`,
-            "Nombre del cliente": nombre,
-            "Teléfono": telefono,
-            "Correo": email,
-            "Detalles del Pedido": detalles,
-            "Imagen de Referencia": imagen_url ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/form_personalizados/${imagen_url}` : "Ninguna"
-          })
+          body: formSubmitData
         });
       } catch (emailError) {
         console.error("Error al enviar el correo de notificación:", emailError);
