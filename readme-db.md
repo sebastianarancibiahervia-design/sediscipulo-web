@@ -48,6 +48,21 @@ Almacena las reseñas y valoraciones de los productos por parte de los clientes.
 > [!IMPORTANT]
 > **Integridad de Datos**: Existe una restricción `UNIQUE(id_tienda, id_cliente)` para evitar duplicidad de reseñas por producto por usuario.
 
+### `form_personalizados`
+Almacena las solicitudes de pedidos a medida enviadas a través del sitio web.
+
+| Columna | Tipo | Descripción |
+| :--- | :--- | :--- |
+| `id` | UUID | Identificador único (PK). |
+| `nombre` | VARCHAR | Nombre de quien solicita. |
+| `numero` | VARCHAR | Teléfono de contacto. |
+| `correo` | VARCHAR | Correo electrónico de contacto. |
+| `detalles` | TEXT | Especificaciones del pedido. |
+| `imagen_url` | TEXT | Referencia visual en el bucket `form_personalizados` (Nullable). |
+| `id_cliente` | UUID | FK a `clientes(id)` si el cliente está registrado (Nullable). |
+| `resuelto` | BOOLEAN | Indica si el pedido ya fue gestionado en el CRM. Default `false`. |
+| `created_at` | TIMESTAMPTZ | Fecha de creación de la solicitud. |
+
 ### `ventas_esperando_stock`
 Almacena los productos de una venta que no pudieron ser procesados por falta de inventario (patrón Waitlist o Backorder).
 

@@ -279,6 +279,27 @@ export default function Navbar() {
         
         {itemsCount > 0 && (
           <div className="p-8 border-t border-black/5 bg-[#FAF8F5] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+            
+            {/* Free Shipping Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-1.5" style={{ color: (70000 - cartTotal) > 0 ? "rgb(30, 30, 30, 0.8)" : "#10B981" }}>
+                  {(70000 - cartTotal) > 0 
+                    ? `Faltan $${(70000 - cartTotal).toLocaleString('es-CL')} para envío gratis` 
+                    : "¡Felicidades! Tienes envío gratis"}
+                </span>
+                {(70000 - cartTotal) > 0 && (
+                  <span className="text-[10px] text-charcoal/50 font-bold">{Math.round(Math.min((cartTotal / 70000) * 100, 100))}%</span>
+                )}
+              </div>
+              <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-1000 ${(70000 - cartTotal) > 0 ? "bg-charcoal" : "bg-[#10B981]"}`}
+                  style={{ width: `${Math.min((cartTotal / 70000) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+
             <div className="flex justify-between items-center mb-8 px-2">
               <span className="text-charcoal/60 font-medium">Subtotal Estimado</span>
               <span className="font-mono font-bold text-2xl text-charcoal">${cartTotal.toLocaleString('es-CL')}</span>

@@ -9,10 +9,10 @@ Registro de arreglos, mejoras e ideas para la evolución del sistema.
 - [x] **Soporte de Video**: Integración de FB Reels y YouTube en el detalle del producto.
 - [x] **Sistema de Calificaciones**: Valoración con estrellas (1-5) y comentarios para compradores.
 - [x] **Estabilización de Producción**: Limpieza exhaustiva de ESLint, corrección de dependencias y validación de build v12 exitosa.
+- [x] **Gamificación de Carrito**: Barra de progreso para Envío Gratis sobre $70.000 implementada.
+- [x] **Estrategia de Venta Cruzada**: Algoritmo de productos relacionados basado en co-ocurrencia de ventas.
+- [x] **Gestión de Leads**: Columna "resuelto" en formularios y trazabilidad mejorada.
 
 ## Próximos Pasos
-- [ ] **Buscador Global**: Mejorar la Topbar con búsqueda predictiva de productos.
-- [ ] **Check de Consistencia**: Auditar que todos los productos tengan asignada una familia válida.
-- [ ] **Reportes de Venta por Familia**: Visualización en el Dashboard de métricas por grupo.
-- [ ] **Gestión de Waitlist (CRM)**: Agregar funcionalidad en el SaaS interno para mover productos sin stock hacia la tabla `ventas_esperando_stock`.
+- [x] **Buscador de Tienda**: Buscador implementado directamente en el catálogo de compra.
 - [ ] **Integración WhatsApp API**: Sistema automático de notificaciones para cuando un carrito pase a `Pedido confirmado`, enviando el detalle de montos finales y productos que entraron a lista de espera.

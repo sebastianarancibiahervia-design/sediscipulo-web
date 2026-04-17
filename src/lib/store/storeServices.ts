@@ -825,3 +825,46 @@ export async function fetchReviewableProducts(
 
   return result;
 }
+
+/**
+ * Obtiene el TOP 3 de productos relacionados por nombre basado en co-ocurrencia en ventas.
+ * Consume la función SQL 'get_related_products' definida en Supabase.
+ */
+export async function fetchRelatedProductsByName(producto_tienda: string, limit = 3): Promise<GroupedProduct[]> {
+  const { data, error } = await supabase.rpc('get_related_products', { 
+    p_name: producto_tienda,
+    p_limit: limit 
+  });
+
+  if (error) {
+    console.error("Error fetching related products via RPC:", error);
+    return [];
+  }
+
+  // Obtenemos todos los productos activos para mapear los nombres devueltos por el RPC
+  // a sus objetos GroupedProduct correspondientes.
+  const allProducts = await fetchActiveStoreProducts();
+  const relatedResults: GroupedProduct[] = [];
+
+  const rows = data as { related_producto_tienda: string; times_bought: number }[];
+  
+  rows.forEach(row => {
+    const product = allProducts.find(p => p.name === row.related_producto_tienda);
+    if (product) {
+      relatedResults.push(product);
+    }
+  });
+
+  // Fallback: Si no hay suficientes productos relacionados por ventas, rellenamos con los más vendidos históricamente
+  if (relatedResults.length < limit) {
+    const historicalTop = await fetchTopHistoricalSellers(10);
+    for (const top of historicalTop) {
+      if (top.name !== producto_tienda && !relatedResults.find(r => r.name === top.name)) {
+        relatedResults.push(top);
+        if (relatedResults.length >= limit) break;
+      }
+    }
+  }
+
+  return relatedResults.slice(0, limit);
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Filter, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, ChevronDown, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import ProductCard from "./ProductCard";
 import { GroupedProduct } from "@/lib/store/storeServices";
 
@@ -9,6 +9,7 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
   const [selectedFamily, setSelectedFamily] = useState<string>("TODOS");
   const [selectedCategory, setSelectedCategory] = useState<string>("TODOS");
   const [sortOrder, setSortOrder] = useState<string>("destacados");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
@@ -59,6 +60,12 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
       result = result.filter(p => p.subcategories.includes(selectedCategory));
     }
 
+    // Filter by Search Term
+    if (searchTerm.trim() !== "") {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(p => p.name.toLowerCase().includes(q));
+    }
+
     // Sorting
     if (sortOrder === "destacados") {
       result.sort((a, b) => b.totalSales - a.totalSales);
@@ -73,7 +80,7 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
     }
 
     return result;
-  }, [initialProducts, selectedFamily, selectedCategory, sortOrder]);
+  }, [initialProducts, selectedFamily, selectedCategory, sortOrder, searchTerm]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -96,8 +103,8 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
   return (
     <div className="space-y-12">
       {/* Header Section */}
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div className="space-y-2">
             <h1 className="text-4xl md:text-5xl font-sans font-bold">
               Catálogo <span className="font-serif italic text-black">SeDiscipulo</span>
@@ -107,15 +114,25 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
             </p>
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-4 self-start md:self-auto">
-            <div className="relative group min-w-[200px]">
+          {/* Controls: Search & Sort */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 self-stretch lg:self-auto w-full lg:w-auto">
+            <div className="relative flex-1 sm:min-w-[240px]">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal/40" />
+              <input 
+                type="text" 
+                placeholder="Buscar producto..." 
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                className="w-full bg-white border border-black/10 text-charcoal text-sm rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-charcoal/20 transition-all font-medium"
+              />
+            </div>
+            <div className="relative group sm:w-[220px]">
               <select 
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full appearance-none bg-neutral-100 border border-black/5 text-charcoal text-sm font-medium rounded-lg px-4 py-2.5 pr-10 outline-none cursor-pointer focus:border-black/20 hover:bg-neutral-200 transition-colors"
+                className="w-full appearance-none bg-white border border-black/10 text-charcoal text-sm font-medium rounded-xl px-4 py-3 pr-10 outline-none cursor-pointer focus:ring-2 focus:ring-charcoal/20 hover:bg-neutral-50 transition-colors"
               >
-                <option value="destacados">Ordenar por: Destacados</option>
+                <option value="destacados">Ordenar: Destacados</option>
                 <option value="price-asc">Precio: Menor a Mayor</option>
                 <option value="price-desc">Precio: Mayor a Menor</option>
                 <option value="alpha-asc">Nombre: A - Z</option>
@@ -126,30 +143,29 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
           </div>
         </div>
 
-        {/* Filter Section */}
-        <div className="flex flex-col gap-4 border-y border-black/5 py-8">
+        {/* Filter Section (Compact & Aesthetic) */}
+        <div className="bg-neutral-50/50 rounded-2xl p-5 border border-black/5 flex flex-col gap-4 shadow-sm">
           {/* Level 1: Families */}
           <div className="space-y-3">
-            <span className="text-[10px] font-bold text-charcoal/30 uppercase tracking-[0.2em] px-1">Familia</span>
-            <div className="flex flex-nowrap overflow-x-auto gap-3 scrollbar-hide no-scrollbar pb-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleFamilyChange("TODOS")}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-xs font-bold transition-all border ${
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all border ${
                   selectedFamily === "TODOS"
-                    ? "bg-charcoal text-white border-charcoal shadow-md scale-105"
-                    : "bg-white text-charcoal/40 border-black/5 hover:border-black/20"
+                    ? "bg-charcoal text-white border-charcoal shadow-md"
+                    : "bg-white text-charcoal/60 border-black/5 hover:border-black/10 hover:bg-neutral-100"
                 }`}
               >
-                TODOS
+                TODAS
               </button>
               {categoryStructure.families.map((family) => (
                 <button
                   key={family}
                   onClick={() => handleFamilyChange(family)}
-                  className={`flex-shrink-0 px-6 py-2.5 rounded-full text-xs font-bold transition-all border uppercase ${
+                  className={`px-5 py-2 rounded-xl text-xs font-bold transition-all border uppercase ${
                     selectedFamily === family
-                      ? "bg-charcoal text-white border-charcoal shadow-md scale-105"
-                      : "bg-white text-charcoal/40 border-black/5 hover:border-black/20"
+                      ? "bg-charcoal text-white border-charcoal shadow-md"
+                      : "bg-white text-charcoal/60 border-black/5 hover:border-black/10 hover:bg-neutral-100"
                   }`}
                 >
                   {family}
@@ -159,34 +175,35 @@ export default function TiendaClient({ initialProducts }: { initialProducts: Gro
           </div>
 
           {/* Level 2: Categories (Nombre) */}
-          <div className="space-y-3 pt-2">
-            <span className="text-[10px] font-bold text-charcoal/30 uppercase tracking-[0.2em] px-1">Categoría</span>
-            <div className="flex flex-nowrap overflow-x-auto gap-3 scrollbar-hide no-scrollbar pb-2">
-              <button
-                onClick={() => handleCategoryChange("TODOS")}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-full text-xs font-bold transition-all border ${
-                  selectedCategory === "TODOS"
-                    ? "bg-charcoal/80 text-white border-charcoal/80 shadow-sm"
-                    : "bg-neutral-50 text-charcoal/40 border-black/5 hover:border-black/20"
-                }`}
-              >
-                {selectedFamily === "TODOS" ? "TODAS" : `TODO EN ${selectedFamily}`}
-              </button>
-              {visibleCategories.map((cat) => (
+          {categoryStructure.families.length > 0 && (
+            <div className="space-y-3 pt-4 border-t border-black/5">
+              <div className="flex flex-wrap gap-2">
                 <button
-                  key={cat}
-                  onClick={() => handleCategoryChange(cat)}
-                  className={`flex-shrink-0 px-6 py-2.5 rounded-full text-xs font-bold transition-all border uppercase ${
-                    selectedCategory === cat
-                      ? "bg-charcoal/80 text-white border-charcoal/80 shadow-sm"
-                      : "bg-neutral-50 text-charcoal/40 border-black/5 hover:border-black/20"
+                  onClick={() => handleCategoryChange("TODOS")}
+                  className={`px-4 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                    selectedCategory === "TODOS"
+                      ? "bg-charcoal/10 text-charcoal border-charcoal/10"
+                      : "bg-white text-charcoal/40 border-black/5 hover:border-black/10"
                   }`}
                 >
-                  {cat}
+                  TODOS
                 </button>
-              ))}
+                {visibleCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => handleCategoryChange(cat)}
+                    className={`px-4 py-1.5 rounded-lg text-[11px] font-bold transition-all border uppercase ${
+                      selectedCategory === cat
+                        ? "bg-charcoal/10 text-charcoal border-charcoal/10"
+                        : "bg-white text-charcoal/40 border-black/5 hover:border-black/10"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

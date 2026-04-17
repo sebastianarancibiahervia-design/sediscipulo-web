@@ -78,7 +78,8 @@ export default function PedidosPersonalizadosPage() {
           correo: email,
           detalles,
           imagen_url,
-          id_cliente: existingClient?.id || null
+          id_cliente: existingClient?.id || null,
+          resuelto: false
         });
 
       if (insertError) throw insertError;

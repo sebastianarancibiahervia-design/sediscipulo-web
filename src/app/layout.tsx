@@ -27,7 +27,6 @@ const ibmPlex = IBM_Plex_Mono({
 });
 
 import WhatsAppFloat from "@/components/WhatsAppFloat";
-import AnnouncementBanner from "@/components/AnnouncementBanner";
 
 export const metadata: Metadata = {
   title: "SeDiscipulo | Tienda de ropa cristiana",
@@ -47,7 +46,6 @@ export default function RootLayout({
       <body
         className={`${plusJakarta?.variable || ''} ${outfit?.variable || ''} ${cormorant?.variable || ''} ${ibmPlex?.variable || ''} antialiased`}
       >
-        <AnnouncementBanner />
         <ConditionalLayout>
           {children}
         </ConditionalLayout>

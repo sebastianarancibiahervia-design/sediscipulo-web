@@ -9,7 +9,7 @@ export default async function TiendaPage() {
   const products = await fetchActiveStoreProducts();
 
   return (
-    <div className="pt-20 pb-24 min-h-[70vh] bg-white text-charcoal px-4 sm:px-6 lg:px-8">
+    <div className="pt-4 pb-24 min-h-[70vh] bg-white text-charcoal px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <Suspense fallback={<div className="py-20 text-center animate-pulse">Cargando catálogo desde Supabase...</div>}>
           <TiendaClient initialProducts={products} />

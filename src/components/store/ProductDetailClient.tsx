@@ -5,8 +5,8 @@ import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { GroupedProduct, fetchActivePromotions, Promocion, fetchProductReviews, ProductReview } from "@/lib/store/storeServices";
-import { getProductImageUrl } from "./ProductCard";
+import { GroupedProduct, fetchActivePromotions, Promocion, fetchProductReviews, ProductReview, fetchRelatedProductsByName } from "@/lib/store/storeServices";
+import ProductCard, { getProductImageUrl } from "./ProductCard";
 import { useCart } from "../CartProvider";
 import StarRating from "./StarRating";
 import ReviewCarousel from "./ReviewCarousel";
@@ -16,6 +16,8 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
   const searchParams = useSearchParams();
   const [activePromos, setActivePromos] = useState<Promocion[]>([]);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<GroupedProduct[]>([]);
+  const [loadingRelated, setLoadingRelated] = useState(true);
 
   useEffect(() => {
     async function loadPromos() {
@@ -34,6 +36,17 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
     }
     loadReviews();
   }, [product.variations]);
+
+  // Fetch related products
+  useEffect(() => {
+    async function loadRelated() {
+      setLoadingRelated(true);
+      const data = await fetchRelatedProductsByName(product.name, 3);
+      setRelatedProducts(data);
+      setLoadingRelated(false);
+    }
+    loadRelated();
+  }, [product.name]);
 
   const isLibreria = product.families.includes("LIBRERIA");
   
@@ -343,6 +356,37 @@ export default function ProductDetailClient({ product }: { product: GroupedProdu
 
       {/* Reviews Carousel — Full Width, OUTSIDE the grid */}
       <ReviewCarousel reviews={reviews} />
+
+      {/* Related Products Section */}
+      <div className="mt-20 pt-16 border-t border-black/5">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div className="space-y-2">
+            <h2 className="text-3xl md:text-4xl font-sans font-bold text-charcoal">
+              Nuestros clientes también se <span className="font-serif italic text-black">llevaron</span>
+            </h2>
+          </div>
+          <Link 
+            href="/tienda" 
+            className="text-sm font-bold text-charcoal/40 hover:text-charcoal transition-colors flex items-center gap-2 group"
+          >
+            Ver catálogo completo <ChevronLeft size={16} className="rotate-180 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        {loadingRelated ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="aspect-[4/5] bg-neutral-100 rounded-3xl animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {relatedProducts.map((p) => (
+              <ProductCard key={p.slug} producto={p} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
